@@ -222,13 +222,19 @@ Cosas del plan gratis que conviene tener escritas:
 ```
 nero-eventos/
 ├── index.html                        ← la app entera: HTML, CSS y JS
-├── public/
+├── assets/
 │   └── logo-nero.png                 ← logo del restaurante (cabecera y favicon)
 ├── referencia/
 │   └── checklist-compartida.html     ← prototipo original, solo consulta
 ├── README.md
 └── .gitignore
 ```
+
+**La carpeta se llama `assets/` y no `public/` a propósito.** Cuando Vercel no detecta
+framework y existe un directorio `public/`, lo toma como raíz del sitio y publica solo su
+contenido — es decir, serviría el logo y dejaría fuera el `index.html`, dando un 404 en la
+página principal. Con cualquier otro nombre, Vercel sirve la raíz del repo, que es lo que
+queremos. **No renombrar `assets/` a `public/`.**
 
 `referencia/checklist-compartida.html` es el prototipo del que salió todo esto. Se guarda
 como referencia histórica; **no se usa y no hay que tocarlo**. La app es `index.html`.
