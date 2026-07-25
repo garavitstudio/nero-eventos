@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Nero · Eventos — Checklist</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Jost', sans-serif;
+    background: #0e0e0e;
+    background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #0e0e0e 60%);
+    margin: 0;
+    padding: 40px 18px 60px;
+    color: #e9e4d8;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+
+  .crest { text-align: center; margin-bottom: 6px; }
+  .crest svg { width: 34px; height: 34px; opacity: 0.85; }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 28px;
+    text-align: center;
+    letter-spacing: 2px;
+    margin: 6px 0 2px;
+    color: #f4ead2;
+  }
+  .sub {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #9c9587;
+    margin-bottom: 26px;
+    font-weight: 300;
+  }
+  .divider { width: 40px; height: 1px; background: #b08d4f; margin: 18px auto 26px; }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #24221e;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 4px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6b6459;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-family: 'Jost', sans-serif;
+  }
+  .tab .tab-main { display: block; font-family: 'Playfair Display', serif; font-size: 14px; letter-spacing: 0.5px; text-transform: none; margin-bottom: 2px; }
+  .tab.active { color: #f4ead2; border-bottom-color: #b08d4f; }
+  .tab.active .tab-main { color: #b08d4f; }
+
+  .section-note {
+    text-align: center;
+    font-size: 11px;
+    font-style: italic;
+    color: #6b6459;
+    margin-bottom: 20px;
+  }
+
+  .who-row { margin-bottom: 18px; }
+  .who-label {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #8a8378;
+    margin-bottom: 6px;
+  }
+  input[type=text] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 2px;
+    border: 1px solid #2c2a26;
+    background: #161513;
+    color: #e9e4d8;
+    font-size: 14px;
+    font-family: 'Jost', sans-serif;
+  }
+  input[type=text]::placeholder { color: #5f5a51; }
+  input[type=text]:focus { outline: none; border-color: #b08d4f; }
+
+  .add-row { display: flex; gap: 8px; margin-bottom: 26px; }
+  .add-row input { flex: 1; }
+  button.add-btn {
+    background: transparent;
+    color: #b08d4f;
+    border: 1px solid #b08d4f;
+    border-radius: 2px;
+    padding: 0 20px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'Jost', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  button.add-btn:hover { background: #b08d4f; color: #0e0e0e; }
+  button.add-btn:active { transform: scale(0.97); }
+
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: #161513;
+    border: 1px solid #24221e;
+    border-radius: 2px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  li:hover { border-color: #3a362e; }
+
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #b08d4f;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #0e0e0e;
+    margin-top: 2px;
+  }
+  .checkbox.done { background: #b08d4f; }
+
+  .item-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 300;
+    word-break: break-word;
+    line-height: 1.4;
+    cursor: text;
+    border-bottom: 1px dashed transparent;
+  }
+  .item-text:hover { border-bottom: 1px dashed #48443c; }
+  .item-text.done { text-decoration: line-through; color: #5f5a51; }
+  .item-text.editing { outline: none; border-bottom: 1px solid #b08d4f; }
+
+  .item-author {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #6b6459;
+    margin-top: 5px;
+  }
+  .del-btn {
+    background: none;
+    border: none;
+    color: #48443c;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 2px;
+    font-family: 'Playfair Display', serif;
+  }
+  .del-btn:hover { color: #b08d4f; }
+
+  .empty {
+    text-align: center;
+    color: #6b6459;
+    font-size: 14px;
+    font-style: italic;
+    padding: 40px 0;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .status {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6b6459;
+    margin-top: 26px;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 10px;
+    color: #4c473f;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .name-warning {
+    display: none;
+    font-size: 11px;
+    color: #c17d5a;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .item-history {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #24221e;
+  }
+  .item-history-entry {
+    font-size: 10px;
+    color: #565148;
+    line-height: 1.6;
+  }
+
+  .conn-status {
+    text-align: center;
+    font-size: 10px;
+    color: #4c473f;
+    margin-bottom: 18px;
+  }
+  .conn-status.error { color: #c17d5a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crest">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#b08d4f" stroke-width="1"><path d="M12 2C12 2 6 6 6 12c0 3.3 2.7 6 6 6s6-2.7 6-6c0-6-6-10-6-10z"/></svg>
+  </div>
+  <h1>Nero · Eventos</h1>
+  <div class="sub">Checklist compartida del equipo</div>
+  <div class="conn-status" id="connStatus">Conectando...</div>
+  <div class="divider"></div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="section-note" id="sectionNote"></div>
+
+  <div class="who-row">
+    <div class="who-label">Tu nombre</div>
+    <input type="text" id="whoInput" placeholder="Ej: Selu" value="Selu" />
+    <div class="name-warning" id="nameWarning">Pon tu nombre antes de apuntar algo</div>
+  </div>
+
+  <div class="add-row">
+    <input type="text" id="newItem" placeholder="Añadir un punto a la lista..." />
+    <button class="add-btn" onclick="addItem()">Añadir</button>
+  </div>
+
+  <ul id="list"></ul>
+  <div class="status" id="status">Cargando...</div>
+  <div class="hint">Toca el texto de un punto para editar la cantidad</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, doc, setDoc, getDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBIv43-_3Mvn0mEPXO-yPU63NskYufUYaw",
+  authDomain: "nero-eventos.firebaseapp.com",
+  projectId: "nero-eventos",
+  storageBucket: "nero-eventos.firebasestorage.app",
+  messagingSenderId: "952289724967",
+  appId: "1:952289724967:web:a5a818e2d7e3a1c2d3dc02"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const SECTIONS = [
+  { key: 'general', label: 'General', title: 'General', note: '(material y suministros generales del evento)' },
+  { key: 'cocteleria', label: 'José Alexis', title: 'Coctelería', note: '(por si quieren apuntar algo, desgraciados)' },
+  { key: 'cocina', label: 'Jordan', title: 'Cocina', note: '(por si quieren apuntar algo, desgraciados)' }
+];
+
+let currentSection = 'general';
+let items = [];
+let unsubscribe = null;
+
+const SEED_GENERAL = [
+  { text: 'Tres botellas de Verdejo', done: true },
+  { text: 'Dos botellas de Martini Blanco', done: true },
+  { text: 'Dos botellas de Martini Rosso', done: true },
+  { text: 'Tres botellas de Ron Barceló', done: true },
+  { text: 'Dos botellas de Beefeater', done: true },
+  { text: 'Dos botellas de Ginebra', done: true },
+  { text: 'Cuatro botellas de Hillera', done: true },
+  { text: 'Servilletas canguro', done: true },
+  { text: 'Bandejas', done: true },
+  { text: 'Fruta: naranja y limón', done: true },
+  { text: 'Cubiertos', done: true },
+  { text: 'Manteles', done: true },
+  { text: 'Vasos', done: true },
+  { text: 'Vasos de plástico', done: true },
+  { text: 'Cuatro cajas de agua', done: false },
+  { text: 'Cinco cajas de Pepsi Cero', done: false },
+  { text: 'Pepsi normal', done: false },
+  { text: 'Tres cajas de tónica', done: false }
+].map(i => ({ ...i, author: 'Selu', createdAt: Date.now(), history: [] }));
+
+function seedFor(sectionKey) {
+  if (sectionKey === 'general') return SEED_GENERAL;
+  return [];
+}
+
+function docRefFor(sectionKey) {
+  return doc(db, 'checklists', sectionKey);
+}
+
+function setConnStatus(text, isError) {
+  const el = document.getElementById('connStatus');
+  el.textContent = text;
+  el.className = 'conn-status' + (isError ? ' error' : '');
+}
+
+function renderTabs() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = '';
+  SECTIONS.forEach(s => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (s.key === currentSection ? ' active' : '');
+    tab.innerHTML = `<span class="tab-main">${s.title}</span>${s.label}`;
+    tab.onclick = () => switchSection(s.key);
+    tabsEl.appendChild(tab);
+  });
+  const active = SECTIONS.find(s => s.key === currentSection);
+  document.getElementById('sectionNote').textContent = active.note;
+}
+
+async function switchSection(key) {
+  currentSection = key;
+  renderTabs();
+  await attachListener();
+}
+
+async function attachListener() {
+  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  const ref = docRefFor(currentSection);
+
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      const seed = seedFor(currentSection);
+      await setDoc(ref, { items: seed });
+    }
+  } catch (e) {
+    setConnStatus('Error de conexión con Firebase', true);
+  }
+
+  unsubscribe = onSnapshot(ref, (snap) => {
+    if (snap.exists()) {
+      items = snap.data().items || [];
+    } else {
+      items = [];
+    }
+    setConnStatus('Sincronizado en tiempo real', false);
+    render();
+  }, (err) => {
+    setConnStatus('Error de conexión con Firebase', true);
+  });
+}
+
+async function saveItems() {
+  const ref = docRefFor(currentSection);
+  try {
+    await setDoc(ref, { items });
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error al guardar. Intenta de nuevo.';
+  }
+}
+
+function currentName() {
+  return document.getElementById('whoInput').value.trim();
+}
+
+function requireName() {
+  const name = currentName();
+  const warning = document.getElementById('nameWarning');
+  if (!name) {
+    warning.style.display = 'block';
+    document.getElementById('whoInput').focus();
+    return null;
+  }
+  warning.style.display = 'none';
+  return name;
+}
+
+function render() {
+  const list = document.getElementById('list');
+  const status = document.getElementById('status');
+  list.innerHTML = '';
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="empty">Nada por aquí todavía</div>';
+  } else {
+    items.forEach((item, idx) => {
+      const li = document.createElement('li');
+
+      const checkbox = document.createElement('div');
+      checkbox.className = 'checkbox' + (item.done ? ' done' : '');
+      checkbox.textContent = item.done ? '✓' : '';
+      checkbox.onclick = () => toggleItem(idx);
+
+      const textWrap = document.createElement('div');
+      textWrap.style.flex = '1';
+
+      const text = document.createElement('div');
+      text.className = 'item-text' + (item.done ? ' done' : '');
+      text.textContent = item.text;
+      text.contentEditable = 'true';
+      text.spellcheck = false;
+      text.addEventListener('focus', () => text.classList.add('editing'));
+      text.addEventListener('blur', () => {
+        text.classList.remove('editing');
+        const newText = text.textContent.trim();
+        if (newText && newText !== item.text) {
+          updateItemText(idx, newText);
+        } else {
+          text.textContent = item.text;
+        }
+      });
+      text.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); text.blur(); }
+      });
+
+      textWrap.appendChild(text);
+
+      if (item.author) {
+        const author = document.createElement('div');
+        author.className = 'item-author';
+        author.textContent = 'apuntado por ' + item.author;
+        textWrap.appendChild(author);
+      }
+
+      if (item.history && item.history.length > 0) {
+        const historyWrap = document.createElement('div');
+        historyWrap.className = 'item-history';
+        item.history.forEach(h => {
+          const entry = document.createElement('div');
+          entry.className = 'item-history-entry';
+          entry.textContent = h.text;
+          historyWrap.appendChild(entry);
+        });
+        textWrap.appendChild(historyWrap);
+      }
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del-btn';
+      delBtn.textContent = '✕';
+      delBtn.onclick = () => deleteItem(idx);
+
+      li.appendChild(checkbox);
+      li.appendChild(textWrap);
+      li.appendChild(delBtn);
+      list.appendChild(li);
+    });
+  }
+
+  const pending = items.filter(i => !i.done).length;
+  status.textContent = items.length === 0
+    ? 'Sin pendientes'
+    : `${pending} pendiente${pending !== 1 ? 's' : ''} de ${items.length}`;
+}
+
+window.addItem = async function() {
+  const name = requireName();
+  if (!name) return;
+
+  const input = document.getElementById('newItem');
+  const text = input.value.trim();
+  if (!text) return;
+
+  items.push({
+    text,
+    done: false,
+    author: name,
+    createdAt: Date.now(),
+    history: []
+  });
+
+  input.value = '';
+  render();
+  await saveItems();
+};
+
+window.toggleItem = async function(idx) {
+  const name = requireName();
+  if (!name) return;
+
+  items[idx].done = !items[idx].done;
+  if (!items[idx].history) items[idx].history = [];
+  items[idx].history.push({
+    text: (items[idx].done ? 'Marcado' : 'Desmarcado') + ' por ' + name,
+    at: Date.now()
+  });
+  render();
+  await saveItems();
+};
+
+async function updateItemText(idx, newText) {
+  const name = requireName();
+  if (!name) { render(); return; }
+
+  const oldText = items[idx].text;
+  items[idx].text = newText;
+  if (!items[idx].history) items[idx].history = [];
+  items[idx].history.push({
+    text: name + ' cambió "' + oldText + '" → "' + newText + '"',
+    at: Date.now()
+  });
+  render();
+  await saveItems();
+}
+
+window.deleteItem = async function(idx) {
+  const name = requireName();
+  if (!name) return;
+
+  items.splice(idx, 1);
+  render();
+  await saveItems();
+};
+
+document.getElementById('newItem').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.addItem();
+});
+
+renderTabs();
+attachListener();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Vercel
+.vercel
+
+# Entorno local
+.env
+.env.local
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.idea/
+.vscode/
+*.swp
+
+# Node (por si algún día se añade tooling)
+node_modules/

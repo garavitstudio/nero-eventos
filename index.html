@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e0e">
+<meta name="description" content="Checklist compartida en tiempo real del equipo de Nero Salamanca para preparar eventos.">
+<title>Nero · Eventos — Checklist compartida</title>
+<link rel="icon" href="public/logo-nero.png">
+<link rel="apple-touch-icon" href="public/logo-nero.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Jost', sans-serif;
+    background: #0e0e0e;
+    background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #0e0e0e 60%);
+    background-attachment: fixed;
+    margin: 0;
+    padding: 34px 18px calc(60px + env(safe-area-inset-bottom));
+    color: #e9e4d8;
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+
+  .crest { text-align: center; margin-bottom: 2px; }
+  .crest img { height: 40px; width: auto; opacity: 0.9; display: inline-block; }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 28px;
+    text-align: center;
+    letter-spacing: 2px;
+    margin: 8px 0 2px;
+    color: #f4ead2;
+  }
+  .sub {
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #9c9587;
+    margin-bottom: 14px;
+    font-weight: 300;
+  }
+  .divider { width: 40px; height: 1px; background: #b08d4f; margin: 18px auto 26px; }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #24221e;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 4px;
+    min-height: 52px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6b6459;
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    font-family: 'Jost', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab .tab-main { display: block; font-family: 'Playfair Display', serif; font-size: 14px; letter-spacing: 0.5px; text-transform: none; margin-bottom: 2px; }
+  .tab.active { color: #f4ead2; border-bottom-color: #b08d4f; }
+  .tab.active .tab-main { color: #b08d4f; }
+
+  .section-note {
+    text-align: center;
+    font-size: 11px;
+    font-style: italic;
+    color: #6b6459;
+    margin-bottom: 20px;
+  }
+
+  .who-row { margin-bottom: 18px; }
+  .who-label {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #8a8378;
+    margin-bottom: 6px;
+  }
+  input[type=text] {
+    width: 100%;
+    padding: 13px 14px;
+    border-radius: 2px;
+    border: 1px solid #2c2a26;
+    background: #161513;
+    color: #e9e4d8;
+    /* 16px evita que iOS haga zoom al enfocar el campo */
+    font-size: 16px;
+    font-weight: 300;
+    font-family: 'Jost', sans-serif;
+  }
+  input[type=text]::placeholder { color: #5f5a51; }
+  input[type=text]:focus { outline: none; border-color: #b08d4f; }
+
+  .add-row { display: flex; gap: 8px; margin-bottom: 26px; }
+  .add-row input { flex: 1; min-width: 0; }
+  button.add-btn {
+    background: transparent;
+    color: #b08d4f;
+    border: 1px solid #b08d4f;
+    border-radius: 2px;
+    padding: 0 20px;
+    min-height: 48px;
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'Jost', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button.add-btn:hover { background: #b08d4f; color: #0e0e0e; }
+  button.add-btn:active { transform: scale(0.97); }
+
+  ul { list-style: none; padding: 0; margin: 0; }
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    background: #161513;
+    border: 1px solid #24221e;
+    border-radius: 2px;
+    padding: 10px 8px 10px 4px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  li:hover { border-color: #3a362e; }
+
+  /* El botón es la zona táctil de 44px; el círculo dorado va dentro */
+  .check-btn {
+    flex-shrink: 0;
+    width: 46px;
+    min-height: 46px;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 6px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #b08d4f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    line-height: 1;
+    color: #0e0e0e;
+  }
+  .checkbox.done { background: #b08d4f; }
+
+  .item-body { flex: 1; min-width: 0; padding: 4px 0; }
+
+  .item-text {
+    font-size: 15px;
+    font-weight: 300;
+    word-break: break-word;
+    line-height: 1.4;
+    cursor: text;
+    border-bottom: 1px dashed transparent;
+  }
+  .item-text:hover { border-bottom: 1px dashed #48443c; }
+  .item-text.done { text-decoration: line-through; color: #5f5a51; }
+  .item-text.editing { outline: none; border-bottom: 1px solid #b08d4f; text-decoration: none; color: #e9e4d8; }
+
+  .item-author {
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #6b6459;
+    margin-top: 5px;
+  }
+  .del-btn {
+    flex-shrink: 0;
+    width: 44px;
+    min-height: 44px;
+    background: none;
+    border: none;
+    color: #48443c;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    font-family: 'Playfair Display', serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .del-btn:hover { color: #b08d4f; }
+
+  .empty {
+    text-align: center;
+    color: #6b6459;
+    font-size: 14px;
+    font-style: italic;
+    padding: 40px 0;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .status {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6b6459;
+    margin-top: 26px;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 10px;
+    color: #4c473f;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .name-warning {
+    display: none;
+    font-size: 11px;
+    color: #c17d5a;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .item-history {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #24221e;
+  }
+  .item-history-entry {
+    font-size: 10px;
+    color: #565148;
+    line-height: 1.6;
+  }
+
+  .conn-status {
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #4c473f;
+  }
+  .conn-status.error { color: #c17d5a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crest">
+    <img src="public/logo-nero.png" alt="Nero Salamanca">
+  </div>
+  <h1>Nero · Eventos</h1>
+  <div class="sub">Checklist compartida del equipo</div>
+  <div class="conn-status" id="connStatus">Conectando...</div>
+  <div class="divider"></div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="section-note" id="sectionNote"></div>
+
+  <div class="who-row">
+    <div class="who-label">Tu nombre</div>
+    <input type="text" id="whoInput" placeholder="Ej: Selu" autocomplete="name" enterkeyhint="done" />
+    <div class="name-warning" id="nameWarning">Pon tu nombre antes de apuntar algo</div>
+  </div>
+
+  <div class="add-row">
+    <input type="text" id="newItem" placeholder="Añadir un punto a la lista..." enterkeyhint="done" />
+    <button class="add-btn" id="addBtn" type="button">Añadir</button>
+  </div>
+
+  <ul id="list"></ul>
+  <div class="status" id="status">Cargando...</div>
+  <div class="hint">Toca el texto de un punto para editar la cantidad</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, doc, setDoc, onSnapshot, runTransaction
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Claves públicas de cliente. No son secretos: Firebase las expone por diseño en
+// el navegador y la seguridad real vive en las reglas de Firestore (ver README).
+const firebaseConfig = {
+  apiKey: "AIzaSyBIv43-_3Mvn0mEPXO-yPU63NskYufUYaw",
+  authDomain: "nero-eventos.firebaseapp.com",
+  projectId: "nero-eventos",
+  storageBucket: "nero-eventos.firebasestorage.app",
+  messagingSenderId: "952289724967",
+  appId: "1:952289724967:web:a5a818e2d7e3a1c2d3dc02"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Para añadir o renombrar una pestaña, toca solo este array.
+const SECTIONS = [
+  { key: 'general',    title: 'General',    label: 'General',      note: '(material y suministros generales del evento)' },
+  { key: 'cocteleria', title: 'Coctelería', label: 'José Alexis',  note: '(por si quieren apuntar algo, desgraciados)' },
+  { key: 'cocina',     title: 'Cocina',     label: 'Jordan',       note: '(por si quieren apuntar algo, desgraciados)' }
+];
+
+const NAME_STORAGE_KEY = 'nero-eventos:nombre';
+
+let currentSection = SECTIONS[0].key;
+let items = [];
+let unsubscribe = null;
+let listenerToken = 0;   // evita que un listener viejo pinte sobre la pestaña nueva
+
+const SEED_GENERAL = [
+  { text: 'Tres botellas de Verdejo', done: true },
+  { text: 'Dos botellas de Martini Blanco', done: true },
+  { text: 'Dos botellas de Martini Rosso', done: true },
+  { text: 'Tres botellas de Ron Barceló', done: true },
+  { text: 'Dos botellas de Beefeater', done: true },
+  { text: 'Dos botellas de Ginebra', done: true },
+  { text: 'Cuatro botellas de Hillera', done: true },
+  { text: 'Servilletas canguro', done: true },
+  { text: 'Bandejas', done: true },
+  { text: 'Fruta: naranja y limón', done: true },
+  { text: 'Cubiertos', done: true },
+  { text: 'Manteles', done: true },
+  { text: 'Vasos', done: true },
+  { text: 'Vasos de plástico', done: true },
+  { text: 'Cuatro cajas de agua', done: false },
+  { text: 'Cinco cajas de Pepsi Cero', done: false },
+  { text: 'Pepsi normal', done: false },
+  { text: 'Tres cajas de tónica', done: false }
+];
+
+function seedFor(sectionKey) {
+  if (sectionKey !== 'general') return [];
+  const now = Date.now();
+  return SEED_GENERAL.map(i => ({ ...i, author: 'Selu', createdAt: now, history: [] }));
+}
+
+function docRefFor(sectionKey) {
+  return doc(db, 'checklists', sectionKey);
+}
+
+function setConnStatus(text, isError) {
+  const el = document.getElementById('connStatus');
+  el.textContent = text;
+  el.className = 'conn-status' + (isError ? ' error' : '');
+}
+
+function renderTabs() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = '';
+  SECTIONS.forEach(s => {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'tab' + (s.key === currentSection ? ' active' : '');
+    const main = document.createElement('span');
+    main.className = 'tab-main';
+    main.textContent = s.title;
+    tab.appendChild(main);
+    tab.appendChild(document.createTextNode(s.label));
+    tab.onclick = () => switchSection(s.key);
+    tabsEl.appendChild(tab);
+  });
+  const active = SECTIONS.find(s => s.key === currentSection);
+  document.getElementById('sectionNote').textContent = active.note;
+}
+
+function switchSection(key) {
+  if (key === currentSection) return;
+  currentSection = key;
+  items = [];
+  renderTabs();
+  render();
+  attachListener();
+}
+
+async function attachListener() {
+  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+
+  const token = ++listenerToken;
+  const section = currentSection;
+  const ref = docRefFor(section);
+
+  // Si el documento aún no existe, se crea con su semilla. En transacción para
+  // que dos móviles abriendo a la vez no se pisen la lista inicial.
+  try {
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) tx.set(ref, { items: seedFor(section) });
+    });
+  } catch (e) {
+    setConnStatus('Error de conexión con Firebase', true);
+  }
+
+  if (token !== listenerToken) return;   // el usuario ya cambió de pestaña
+
+  unsubscribe = onSnapshot(ref, (snap) => {
+    if (token !== listenerToken) return;
+    items = (snap.exists() && snap.data().items) || [];
+    setConnStatus('Sincronizado en tiempo real', false);
+    render();
+  }, () => {
+    if (token !== listenerToken) return;
+    setConnStatus('Error de conexión con Firebase', true);
+  });
+}
+
+async function saveItems() {
+  try {
+    await setDoc(docRefFor(currentSection), { items });
+  } catch (e) {
+    document.getElementById('status').textContent = 'Error al guardar. Intenta de nuevo.';
+  }
+}
+
+function currentName() {
+  return document.getElementById('whoInput').value.trim();
+}
+
+function requireName() {
+  const name = currentName();
+  const warning = document.getElementById('nameWarning');
+  if (!name) {
+    warning.style.display = 'block';
+    document.getElementById('whoInput').focus();
+    return null;
+  }
+  warning.style.display = 'none';
+  return name;
+}
+
+function pushHistory(item, text) {
+  if (!Array.isArray(item.history)) item.history = [];
+  item.history.push({ text, at: Date.now() });
+}
+
+function render() {
+  const list = document.getElementById('list');
+  const status = document.getElementById('status');
+
+  // Si alguien está escribiendo en un punto, no repintamos: le borraríamos
+  // la edición a medias cuando llega un cambio de otro móvil.
+  const active = document.activeElement;
+  if (active && active.classList && active.classList.contains('item-text')) return;
+
+  list.innerHTML = '';
+
+  if (items.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'Nada por aquí todavía';
+    list.appendChild(empty);
+  } else {
+    items.forEach((item, idx) => {
+      const li = document.createElement('li');
+
+      const checkBtn = document.createElement('button');
+      checkBtn.type = 'button';
+      checkBtn.className = 'check-btn';
+      checkBtn.setAttribute('aria-label', item.done ? 'Desmarcar' : 'Marcar');
+      const checkbox = document.createElement('span');
+      checkbox.className = 'checkbox' + (item.done ? ' done' : '');
+      checkbox.textContent = item.done ? '✓' : '';
+      checkBtn.appendChild(checkbox);
+      checkBtn.onclick = () => toggleItem(idx);
+
+      const body = document.createElement('div');
+      body.className = 'item-body';
+
+      const text = document.createElement('div');
+      text.className = 'item-text' + (item.done ? ' done' : '');
+      text.textContent = item.text;
+      text.contentEditable = 'true';
+      text.spellcheck = false;
+      text.addEventListener('focus', () => text.classList.add('editing'));
+      text.addEventListener('blur', () => {
+        text.classList.remove('editing');
+        const newText = text.textContent.trim();
+        const original = items[idx] ? items[idx].text : '';
+        if (newText && newText !== original) {
+          updateItemText(idx, newText);
+        } else {
+          text.textContent = original;
+          render();
+        }
+      });
+      text.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); text.blur(); }
+      });
+      body.appendChild(text);
+
+      if (item.author) {
+        const author = document.createElement('div');
+        author.className = 'item-author';
+        author.textContent = 'apuntado por ' + item.author;
+        body.appendChild(author);
+      }
+
+      if (Array.isArray(item.history) && item.history.length > 0) {
+        const historyWrap = document.createElement('div');
+        historyWrap.className = 'item-history';
+        item.history.forEach(h => {
+          const entry = document.createElement('div');
+          entry.className = 'item-history-entry';
+          entry.textContent = h.text;
+          historyWrap.appendChild(entry);
+        });
+        body.appendChild(historyWrap);
+      }
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'del-btn';
+      delBtn.setAttribute('aria-label', 'Borrar');
+      delBtn.textContent = '✕';
+      delBtn.onclick = () => deleteItem(idx);
+
+      li.appendChild(checkBtn);
+      li.appendChild(body);
+      li.appendChild(delBtn);
+      list.appendChild(li);
+    });
+  }
+
+  const pending = items.filter(i => !i.done).length;
+  status.textContent = items.length === 0
+    ? 'Sin pendientes'
+    : `${pending} pendiente${pending !== 1 ? 's' : ''} de ${items.length}`;
+}
+
+async function addItem() {
+  const name = requireName();
+  if (!name) return;
+
+  const input = document.getElementById('newItem');
+  const text = input.value.trim();
+  if (!text) return;
+
+  items.push({ text, done: false, author: name, createdAt: Date.now(), history: [] });
+  input.value = '';
+  render();
+  await saveItems();
+}
+
+async function toggleItem(idx) {
+  const name = requireName();
+  if (!name) return;
+  const item = items[idx];
+  if (!item) return;
+
+  item.done = !item.done;
+  pushHistory(item, (item.done ? 'Marcado' : 'Desmarcado') + ' por ' + name);
+  render();
+  await saveItems();
+}
+
+async function updateItemText(idx, newText) {
+  const name = requireName();
+  const item = items[idx];
+  if (!name || !item) { render(); return; }
+
+  const oldText = item.text;
+  item.text = newText;
+  pushHistory(item, name + ' cambió "' + oldText + '" → "' + newText + '"');
+  render();
+  await saveItems();
+}
+
+async function deleteItem(idx) {
+  const name = requireName();
+  if (!name) return;
+  if (!items[idx]) return;
+
+  items.splice(idx, 1);
+  render();
+  await saveItems();
+}
+
+// El nombre se recuerda entre visitas: se abre el link y ya está puesto.
+const whoInput = document.getElementById('whoInput');
+try {
+  const saved = localStorage.getItem(NAME_STORAGE_KEY);
+  if (saved) whoInput.value = saved;
+} catch (e) { /* navegador con almacenamiento bloqueado: se sigue sin recordar */ }
+
+whoInput.addEventListener('input', () => {
+  try { localStorage.setItem(NAME_STORAGE_KEY, whoInput.value.trim()); } catch (e) {}
+  if (whoInput.value.trim()) document.getElementById('nameWarning').style.display = 'none';
+});
+whoInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); whoInput.blur(); }
+});
+
+document.getElementById('addBtn').addEventListener('click', addItem);
+document.getElementById('newItem').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); addItem(); }
+});
+
+renderTabs();
+attachListener();
+</script>
+</body>
+</html>
