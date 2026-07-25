@@ -13,6 +13,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
+  /* Cuando algo lleva el atributo hidden, se esconde y punto. Sin esta línea
+     cualquier clase con `display` lo deja visible igual (le pasaba al botón de
+     quitar filtros y a la fila de subcategorías). */
+  [hidden] { display: none !important; }
   body {
     font-family: 'Jost', sans-serif;
     background: #0e0e0e;
@@ -349,13 +353,167 @@
     font-style: italic;
   }
 
-  .name-warning {
-    display: none;
-    font-size: 11px;
-    color: #c17d5a;
-    margin-top: 6px;
-    font-style: italic;
+  /* ---- Ventanas emergentes ----
+     El aviso del nombre era una línea de texto debajo del campo y se colaba: si no
+     estabas atento parecía que la app no hacía nada. Ahora se pone delante. */
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(6, 6, 6, 0.9);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
   }
+  .modal-card {
+    width: 100%;
+    max-width: 370px;
+    max-height: 84vh;
+    overflow-y: auto;
+    background: #161513;
+    border: 1px solid #2c2a26;
+    border-top: 2px solid #b08d4f;
+    border-radius: 2px;
+    padding: 24px 20px 20px;
+    animation: asomar 0.18s ease;
+  }
+  @keyframes asomar { from { opacity: 0; transform: translateY(12px); } }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 21px;
+    color: #f4ead2;
+    margin-bottom: 8px;
+  }
+  .modal-text {
+    font-size: 13px;
+    font-weight: 300;
+    color: #9c9587;
+    line-height: 1.65;
+    margin-bottom: 18px;
+  }
+  .modal-quote {
+    font-size: 16px;
+    font-weight: 300;
+    color: #e9e4d8;
+    line-height: 1.4;
+    word-break: break-word;
+    border-left: 2px solid #3a2f1c;
+    padding-left: 10px;
+    margin-bottom: 18px;
+  }
+  .modal-label {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #565148;
+    margin-bottom: 8px;
+  }
+  .modal-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .modal-options .chip { min-height: 42px; }
+  .chip-tip {
+    color: #b08d4f;
+    margin-left: 6px;
+    font-size: 8px;
+  }
+  .modal-btn {
+    display: block;
+    width: 100%;
+    min-height: 50px;
+    background: transparent;
+    color: #b08d4f;
+    border: 1px solid #b08d4f;
+    border-radius: 2px;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .modal-btn:hover { background: #b08d4f; color: #0e0e0e; }
+  .modal-btn:disabled { opacity: 0.35; cursor: default; background: transparent; color: #b08d4f; }
+  .modal-cancel {
+    display: block;
+    margin: 12px auto 0;
+    background: none;
+    border: none;
+    color: #565148;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: underline;
+    cursor: pointer;
+    min-height: 34px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .modal-cancel:hover { color: #8a8378; }
+
+  /* ---- Registro de borrados ----
+     Discreto a propósito: casi siempre no hace falta, pero cuando falta algo tiene
+     que poder mirarse quién lo quitó y cuándo. */
+  .trash-toggle {
+    display: block;
+    margin: 24px auto 0;
+    background: none;
+    border: none;
+    color: #4c473f;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: underline;
+    cursor: pointer;
+    min-height: 34px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .trash-toggle:hover { color: #8a8378; }
+  .trash {
+    margin-top: 6px;
+    border-top: 1px dashed #24221e;
+    padding-top: 6px;
+  }
+  .trash-entry { padding: 10px 0; border-bottom: 1px dashed #1c1a17; }
+  .trash-entry:last-child { border-bottom: none; }
+  .trash-text {
+    font-size: 13px;
+    font-weight: 300;
+    color: #6b6459;
+    text-decoration: line-through;
+    word-break: break-word;
+  }
+  .trash-meta {
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    color: #4c473f;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+  .trash-restore {
+    background: none;
+    border: none;
+    padding: 6px 0 0;
+    color: #6b6459;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: underline;
+    cursor: pointer;
+    min-height: 32px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .trash-restore:hover { color: #b08d4f; }
 
   .item-history {
     margin-top: 8px;
@@ -567,7 +725,6 @@
   <div class="who-row">
     <div class="who-label">Tu nombre</div>
     <input type="text" id="whoInput" placeholder="Ej: Selu" autocomplete="name" enterkeyhint="done" />
-    <div class="name-warning" id="nameWarning">Pon tu nombre antes de apuntar algo</div>
   </div>
 
   <div class="add-row">
@@ -588,7 +745,14 @@
   <ul id="list"></ul>
   <div class="status" id="status">Cargando...</div>
   <div class="hint">Toca el texto de un punto para editar la cantidad</div>
+
+  <button class="trash-toggle" id="trashToggle" type="button" hidden></button>
+  <div class="trash" id="trashPanel" hidden></div>
   </div>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-card" id="modalCard"></div>
 </div>
 
 <script type="module">
@@ -915,8 +1079,9 @@ let currentSection = SECTIONS[0].key;
 
 // Las tres listas viven en memoria a la vez, no solo la de la pestaña abierta:
 // el buscador y el detector de repetidos las necesitan todas.
-const store = {};
-SECTIONS.forEach(s => { store[s.key] = []; });
+const store = {};      // los puntos de cada lista
+const borrados = {};   // lo que se ha borrado de cada lista, con quién y cuándo
+SECTIONS.forEach(s => { store[s.key] = []; borrados[s.key] = []; });
 
 let items = store[currentSection];   // alias de la lista de la pestaña abierta
 let version = 0;                     // sube con cada cambio; invalida lo cacheado
@@ -925,6 +1090,7 @@ let version = 0;                     // sube con cada cambio; invalida lo cachea
 let consulta = '';
 let verRepetidos = false;
 let resaltado = null;                // punto al que hay que llevar la vista
+let verBorrados = false;             // el registro de borrados, desplegado o no
 
 // Filtros. No se guardan en localStorage a propósito: si alguien abre el link y le
 // saliera media lista por un filtro de la última vez, pensaría que faltan cosas.
@@ -1069,6 +1235,7 @@ function switchSection(key) {
   if (key === currentSection) return;
   currentSection = key;
   items = store[key];
+  verBorrados = false;
   // Cada pestaña es una lista distinta: arrastrar el filtro de la anterior solo
   // consigue que parezca vacía sin motivo.
   quitarFiltros();
@@ -1084,7 +1251,7 @@ async function arrancar() {
     try {
       await runTransaction(db, async (tx) => {
         const snap = await tx.get(ref);
-        if (!snap.exists()) tx.set(ref, { items: seedFor(s.key) });
+        if (!snap.exists()) tx.set(ref, { items: seedFor(s.key), borrados: [] });
       });
     } catch (e) {
       setConnStatus('Error de conexión con Firebase', true);
@@ -1097,7 +1264,9 @@ async function arrancar() {
   // pestaña es instantáneo.
   SECTIONS.forEach(s => {
     onSnapshot(docRefFor(s.key), (snap) => {
-      store[s.key] = (snap.exists() && snap.data().items) || [];
+      const datos = (snap.exists() && snap.data()) || {};
+      store[s.key] = datos.items || [];
+      borrados[s.key] = datos.borrados || [];
       if (s.key === currentSection) items = store[s.key];
       datosCambiados();
       setConnStatus('Sincronizado en tiempo real', false);
@@ -1115,7 +1284,7 @@ function datosCambiados() {
 
 async function saveItems() {
   try {
-    await setDoc(docRefFor(currentSection), { items });
+    await setDoc(docRefFor(currentSection), { items, borrados: borrados[currentSection] || [] });
   } catch (e) {
     document.getElementById('status').textContent = 'Error al guardar. Intenta de nuevo.';
   }
@@ -1125,16 +1294,187 @@ function currentName() {
   return document.getElementById('whoInput').value.trim();
 }
 
-function requireName() {
-  const name = currentName();
-  const warning = document.getElementById('nameWarning');
-  if (!name) {
-    warning.style.display = 'block';
-    document.getElementById('whoInput').focus();
-    return null;
-  }
-  warning.style.display = 'none';
-  return name;
+/* ---------------------------------------------------------------------------
+   Ventanas emergentes
+
+   Dos cosas que se hacían con un textito en la página y no funcionaban: avisar de
+   que falta el nombre (se leía tarde o no se leía, y parecía que la app estaba
+   rota) y elegir la categoría de lo que se apunta (había que apuntarlo, buscarlo
+   en la lista y cambiárselo). Las dos se ponen delante y no se puede seguir sin
+   contestar.
+--------------------------------------------------------------------------- */
+
+let cerrarModal = null;   // lo pone abrirModal; se llama al resolver
+
+function abrirModal(pintar) {
+  if (cerrarModal) cerrarModal();   // solo una ventana a la vez: la anterior se cancela
+  return new Promise(resolve => {
+    const fondo = document.getElementById('modal');
+    const card = document.getElementById('modalCard');
+    card.innerHTML = '';
+    fondo.hidden = false;
+
+    let hecho = false;
+    const terminar = (valor) => {
+      if (hecho) return;
+      hecho = true;
+      fondo.hidden = true;
+      card.innerHTML = '';
+      cerrarModal = null;
+      resolve(valor);
+    };
+    cerrarModal = () => terminar(null);
+
+    // Tocar fuera de la tarjeta cancela; dentro, no
+    fondo.onclick = (e) => { if (e.target === fondo) terminar(null); };
+
+    pintar(card, terminar);
+  });
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && cerrarModal) cerrarModal();
+});
+
+function tituloModal(card, titulo, texto) {
+  const h = document.createElement('div');
+  h.className = 'modal-title';
+  h.textContent = titulo;
+  card.appendChild(h);
+  const p = document.createElement('div');
+  p.className = 'modal-text';
+  p.textContent = texto;
+  card.appendChild(p);
+}
+
+function botonModal(card, etiqueta, onClick) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'modal-btn';
+  btn.textContent = etiqueta;
+  btn.onclick = onClick;
+  card.appendChild(btn);
+  return btn;
+}
+
+function cancelarModal(card, etiqueta, onClick) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'modal-cancel';
+  btn.textContent = etiqueta;
+  btn.onclick = onClick;
+  card.appendChild(btn);
+}
+
+// Pide el nombre y no deja seguir sin él. Devuelve el nombre, o null si se sale.
+function pedirNombre() {
+  return abrirModal((card, terminar) => {
+    tituloModal(card, 'Antes de nada, tu nombre',
+      'Hace falta para que quede constancia de quién apunta, quién marca y quién borra cada cosa. Se guarda en este móvil: solo hay que escribirlo una vez.');
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Ej: Selu';
+    input.autocomplete = 'name';
+    input.enterKeyHint = 'done';
+    input.style.marginBottom = '18px';
+    card.appendChild(input);
+
+    const aceptar = () => {
+      const nombre = input.value.trim();
+      if (!nombre) { input.focus(); return; }
+      guardarNombre(nombre);
+      terminar(nombre);
+    };
+
+    const btn = botonModal(card, 'Continuar', aceptar);
+    btn.disabled = true;
+    input.addEventListener('input', () => { btn.disabled = !input.value.trim(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); aceptar(); } });
+
+    cancelarModal(card, 'Ahora no', () => terminar(null));
+    setTimeout(() => input.focus(), 50);
+  });
+}
+
+// El nombre solo se pide cuando falta; quien ya lo tiene puesto no ve nada.
+function exigirNombre() {
+  const nombre = currentName();
+  return nombre ? Promise.resolve(nombre) : pedirNombre();
+}
+
+function guardarNombre(nombre) {
+  const input = document.getElementById('whoInput');
+  input.value = nombre;
+  try { localStorage.setItem(NAME_STORAGE_KEY, nombre); } catch (e) {}
+}
+
+// Enseña la categoría que ha adivinado la app ya marcada: si acierta es un toque,
+// y si no se cambia aquí mismo, sin tener que buscar el punto luego en la lista.
+function pedirCategoria(texto, sugerida) {
+  return abrirModal((card, terminar) => {
+    const CATS = CATS_();
+    tituloModal(card, '¿Dónde va esto?',
+      'Viene marcada la categoría que le ha puesto la app. Si es esa, un toque en el botón; si no, cámbiala ahora.');
+
+    const cita = document.createElement('div');
+    cita.className = 'modal-quote';
+    cita.textContent = texto;
+    card.appendChild(cita);
+
+    const etiqueta = document.createElement('div');
+    etiqueta.className = 'modal-label';
+    etiqueta.textContent = 'Categoría';
+    card.appendChild(etiqueta);
+
+    // Todas las combinaciones categoría/subcategoría, en plano
+    const opciones = [];
+    Object.keys(CATS).forEach(ck => {
+      const subs = CATS[ck].subs;
+      if (subs) Object.keys(subs).forEach(sk => opciones.push({ cat: ck, sub: sk, label: CATS[ck].label + ' · ' + subs[sk] }));
+      else opciones.push({ cat: ck, sub: null, label: CATS[ck].label });
+    });
+
+    const claveSugerida = sugerida.cat + '|' + (sugerida.sub || '');
+    let elegida = opciones.find(o => o.cat + '|' + (o.sub || '') === claveSugerida) || opciones[opciones.length - 1];
+
+    const caja = document.createElement('div');
+    caja.className = 'modal-options';
+    card.appendChild(caja);
+
+    const btn = botonModal(card, '', () => terminar(elegida));
+
+    const pintarOpciones = () => {
+      caja.innerHTML = '';
+      opciones.forEach(o => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'chip' + (o === elegida ? ' active' : '');
+        chip.textContent = o.label;
+        if (o.cat + '|' + (o.sub || '') === claveSugerida) {
+          const tip = document.createElement('span');
+          tip.className = 'chip-tip';
+          tip.textContent = '✓';
+          chip.appendChild(tip);
+        }
+        chip.onclick = () => { elegida = o; pintarOpciones(); };
+        caja.appendChild(chip);
+      });
+      btn.textContent = 'Añadir en ' + elegida.label;
+    };
+    pintarOpciones();
+
+    cancelarModal(card, 'Cancelar', () => terminar(null));
+  });
+}
+
+// Entre pedir el nombre y actuar puede haber llegado un cambio de otro móvil, que
+// reemplaza la lista entera: el índice de antes ya no vale.
+function indiceDe(item) {
+  const directo = items.indexOf(item);
+  if (directo !== -1) return directo;
+  const clave = claveItem(item);
+  return items.findIndex(x => claveItem(x) === clave);
 }
 
 function pushHistory(item, text) {
@@ -1387,6 +1727,7 @@ function renderLista() {
     status.textContent = hayFiltro() ? `${base} · mostrando ${visibles}` : base;
   }
   renderFiltros();
+  renderPapelera();
 }
 
 /* ---------------------------------------------------------------------------
@@ -1616,15 +1957,19 @@ function avisoAdd(texto) {
 }
 
 async function addItem() {
-  const name = requireName();
-  if (!name) return;
-
   const input = document.getElementById('newItem');
   const text = input.value.trim();
   if (!text) return;
 
-  const { cat, sub } = clasificar(text);
-  const nuevo = { text, done: false, cat, sub, author: name, createdAt: Date.now(), history: [] };
+  const name = await exigirNombre();
+  if (!name) return;
+
+  // La app propone categoría leyendo el texto, pero la última palabra es de quien
+  // apunta: se confirma o se cambia aquí, no después buscándolo en la lista.
+  const elegida = await pedirCategoria(text, clasificar(text));
+  if (!elegida) return;   // ha cancelado: lo escrito se queda en la caja
+
+  const nuevo = { text, done: false, cat: elegida.cat, sub: elegida.sub, author: name, createdAt: Date.now(), history: [] };
   items.push(nuevo);
   input.value = '';
 
@@ -1639,9 +1984,10 @@ async function addItem() {
 }
 
 async function cambiarCategoria(idx, valor) {
-  const name = requireName();
   const item = items[idx];
-  if (!name || !item) { render(); return; }
+  if (!item) { render(); return; }
+  const name = await exigirNombre();
+  if (!name || indiceDe(item) === -1) { render(); return; }
 
   const [cat, sub] = valor.split('|');
   const antes = nombreCat(item);
@@ -1654,10 +2000,10 @@ async function cambiarCategoria(idx, valor) {
 }
 
 async function toggleItem(idx) {
-  const name = requireName();
-  if (!name) return;
   const item = items[idx];
   if (!item) return;
+  const name = await exigirNombre();
+  if (!name || indiceDe(item) === -1) { render(); return; }
 
   item.done = !item.done;
   pushHistory(item, (item.done ? 'Marcado' : 'Desmarcado') + ' por ' + name);
@@ -1666,9 +2012,10 @@ async function toggleItem(idx) {
 }
 
 async function updateItemText(idx, newText) {
-  const name = requireName();
   const item = items[idx];
-  if (!name || !item) { render(); return; }
+  if (!item) { render(); return; }
+  const name = await exigirNombre();
+  if (!name || indiceDe(item) === -1) { render(); return; }
 
   const oldText = item.text;
   item.text = newText;
@@ -1678,11 +2025,113 @@ async function updateItemText(idx, newText) {
 }
 
 async function deleteItem(idx) {
-  const name = requireName();
+  const item = items[idx];
+  if (!item) return;
+  const name = await exigirNombre();
   if (!name) return;
-  if (!items[idx]) return;
 
-  items.splice(idx, 1);
+  const pos = indiceDe(item);
+  if (pos === -1) { render(); return; }
+
+  // Antes de quitarlo se guarda quién lo quitó y cuándo. Es lo que evita la
+  // discusión de "yo no he sido" cuando falta algo en el evento.
+  registrarBorrado(item, name);
+  items.splice(pos, 1);
+  render();
+  await saveItems();
+}
+
+/* ---------------------------------------------------------------------------
+   Registro de borrados
+--------------------------------------------------------------------------- */
+
+// Se guarda con la lista, en el mismo documento. Se queda con los últimos 50: es
+// un registro para mirar cuando falta algo, no un archivo histórico.
+const MAX_BORRADOS = 50;
+
+function registrarBorrado(item, quien) {
+  const lista = borrados[currentSection] || (borrados[currentSection] = []);
+  lista.push({
+    text: item.text,
+    cat: item.cat || null,
+    sub: item.sub || null,
+    done: !!item.done,
+    author: item.author || null,     // quién lo había apuntado
+    history: Array.isArray(item.history) ? item.history : [],
+    by: quien,                       // quién lo ha borrado
+    at: Date.now()
+  });
+  if (lista.length > MAX_BORRADOS) lista.splice(0, lista.length - MAX_BORRADOS);
+}
+
+function cuando(ts) {
+  const d = new Date(ts);
+  const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const hoy = new Date();
+  const ayer = new Date(hoy.getTime() - 86400000);
+  if (d.toDateString() === hoy.toDateString()) return 'hoy a las ' + hora;
+  if (d.toDateString() === ayer.toDateString()) return 'ayer a las ' + hora;
+  const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  return d.getDate() + ' ' + MESES[d.getMonth()] + ' a las ' + hora;
+}
+
+function renderPapelera() {
+  const btn = document.getElementById('trashToggle');
+  const panel = document.getElementById('trashPanel');
+  const lista = borrados[currentSection] || [];
+
+  btn.hidden = lista.length === 0;
+  panel.hidden = !verBorrados || lista.length === 0;
+  if (lista.length === 0) { verBorrados = false; return; }
+
+  btn.textContent = (verBorrados ? 'Ocultar lo borrado' : 'Ver lo borrado') + ' (' + lista.length + ')';
+  if (!verBorrados) return;
+
+  panel.innerHTML = '';
+  lista.slice().reverse().forEach(entrada => {   // lo último borrado, arriba
+    const fila = document.createElement('div');
+    fila.className = 'trash-entry';
+
+    const texto = document.createElement('div');
+    texto.className = 'trash-text';
+    texto.textContent = entrada.text;
+    fila.appendChild(texto);
+
+    const meta = document.createElement('div');
+    meta.className = 'trash-meta';
+    meta.textContent = 'Borrado por ' + entrada.by + ' · ' + cuando(entrada.at) +
+      (entrada.author ? ' · lo había apuntado ' + entrada.author : '');
+    fila.appendChild(meta);
+
+    const volver = document.createElement('button');
+    volver.type = 'button';
+    volver.className = 'trash-restore';
+    volver.textContent = 'Volver a añadirlo';
+    volver.onclick = () => restaurarBorrado(entrada);
+    fila.appendChild(volver);
+
+    panel.appendChild(fila);
+  });
+}
+
+async function restaurarBorrado(entrada) {
+  const name = await exigirNombre();
+  if (!name) return;
+
+  const lista = borrados[currentSection] || [];
+  const pos = lista.indexOf(entrada);
+  if (pos === -1) { render(); return; }   // otro móvil ya lo recuperó
+
+  lista.splice(pos, 1);
+  items.push({
+    text: entrada.text,
+    done: false,
+    cat: entrada.cat,
+    sub: entrada.sub,
+    author: entrada.author || name,
+    createdAt: Date.now(),
+    history: (entrada.history || []).concat([{ text: name + ' lo recuperó de lo borrado', at: Date.now() }])
+  });
   render();
   await saveItems();
 }
@@ -1696,7 +2145,6 @@ try {
 
 whoInput.addEventListener('input', () => {
   try { localStorage.setItem(NAME_STORAGE_KEY, whoInput.value.trim()); } catch (e) {}
-  if (whoInput.value.trim()) document.getElementById('nameWarning').style.display = 'none';
 });
 whoInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); whoInput.blur(); }
@@ -1720,6 +2168,11 @@ newItemInput.addEventListener('input', () => {
 document.getElementById('filterReset').addEventListener('click', () => {
   quitarFiltros();
   render();
+});
+
+document.getElementById('trashToggle').addEventListener('click', () => {
+  verBorrados = !verBorrados;
+  renderPapelera();
 });
 
 const searchInput = document.getElementById('searchInput');

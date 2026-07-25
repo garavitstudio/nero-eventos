@@ -18,9 +18,15 @@ Se abre en el navegador del móvil y ya está. **No hay que instalar nada, no ha
 registrarse y no hay login.** Se pasa el link por el grupo de WhatsApp y quien lo abra
 entra directo.
 
-Lo único obligatorio es **poner tu nombre** arriba antes de tocar nada. Sirve para que
-quede constancia de quién apunta, quién marca y quién cambia las cantidades. El nombre se
-queda guardado en ese móvil, así que solo hay que escribirlo la primera vez.
+Lo único obligatorio es **poner tu nombre**. Sirve para que quede constancia de quién
+apunta, quién marca, quién cambia las cantidades y quién borra. Si intentas hacer algo sin
+haberlo puesto, **sale una ventana en medio de la pantalla** que no deja seguir hasta
+escribirlo — antes era un textito debajo del campo y se colaba: si no estabas atento
+parecía que la app se había quedado colgada. En cuanto lo escribes, **se hace lo que
+ibas a hacer**, no hay que repetirlo. El nombre se queda guardado en ese móvil, así que
+solo se escribe la primera vez.
+
+Mirar la lista no pide nada: el nombre solo se pide al tocar algo.
 
 Tres pestañas independientes, cada una con su propia lista:
 
@@ -44,6 +50,27 @@ Qué se puede hacer con cada punto de la lista:
 Debajo de cada punto queda escrito quién lo apuntó y el historial completo de cambios:
 quién lo marcó, quién lo desmarcó y quién cambió qué por qué. **Ese historial no se borra
 nunca**, es a propósito.
+
+### Al apuntar algo, se elige la categoría en el momento
+
+Al darle a **Añadir** sale una ventana con lo que has escrito y **la categoría que le ha
+puesto la app ya marcada**. Si ha acertado, un toque en el botón (*"Añadir en Bebidas ·
+Licores"*) y listo. Si se ha equivocado, se toca la categoría buena y se añade. Así no hay
+que apuntar el punto, buscarlo luego en la lista y cambiárselo ahí.
+
+La sugerencia sigue siendo la de siempre: la app lee el texto ("3 botellas de Beefeater" →
+Bebidas · Licores). Lo que cambia es que ahora **pasa por delante de quien apunta** antes
+de guardarse. Cancelar no añade nada y deja lo escrito en la caja.
+
+### Lo que se ha borrado
+
+Al final de cada lista hay un enlace discreto — **Ver lo borrado (3)** — que solo aparece
+si se ha borrado algo en esa pestaña. Dentro está cada punto que se quitó, **quién lo
+quitó, cuándo y quién lo había apuntado**. Es para cuando falta algo el día del evento y
+nadie sabe qué pasó: la evidencia está ahí y se acabó la discusión.
+
+Cada entrada lleva un **Volver a añadirlo**, por si fue sin querer. Se guardan los últimos
+50 borrados de cada lista.
 
 ### Buscador
 
@@ -162,9 +189,25 @@ Y dentro de cada documento, todos los puntos en un solo array:
         { text: "Marcado por Jordan", at: 1737800100000 }
       ]
     }
+  ],
+  borrados: [                              // registro de lo que se ha quitado
+    {
+      text: "3 cajas de tónica",
+      cat: "bebidas", sub: "refrescos",
+      done: false,
+      author: "Selu",                      // quién lo había apuntado
+      history: [ /* el que tuviera el punto */ ],
+      by: "Jordan",                        // quién lo borró
+      at: 1737900000000
+    }
   ]
 }
 ```
+
+`borrados` **sí se recorta**: se queda con los últimos 50 de cada lista. Es un registro
+para mirar cuando falta algo, no un archivo histórico, y todo va en el mismo documento.
+Los documentos de antes de que existiera no tienen el campo; se lee como lista vacía y no
+pasa nada.
 
 Los puntos apuntados antes de que existieran los filtros no tienen `cat` ni `sub`
 guardados. No pasa nada: la app se los calcula al vuelo al pintarlos, **sin escribir en
