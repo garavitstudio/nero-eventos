@@ -47,9 +47,14 @@ nunca**, es a propósito.
 Sobre la lista hay dos filtros que se combinan, y funcionan igual en las tres pestañas:
 
 1. **Por estado** (la barra de arriba): *Todos* · *Pendientes* · *Tachados*. Para ver de un
-   vistazo lo que falta por cargar.
-2. **Por tipo**: *Bebidas* · *Utensilios* · *Otros*. Al entrar en **Bebidas** aparece una
-   segunda fila con *Refrescos* · *Vinos* · *Licores* · *Otras*.
+   vistazo lo que falta por cargar. Es igual en las tres pestañas.
+2. **Por tipo**, y aquí **cada pestaña tiene los suyos**, porque a Jordan no le sirve
+   filtrar por vinos y licores:
+
+| Pestaña | Categorías |
+|---|---|
+| **General** y **Coctelería** | *Bebidas* (con *Refrescos* · *Vinos* · *Licores* · *Otras*) · *Utensilios* · *Otros* |
+| **Cocina** | *Género* (con *Salsas* · *Charcutería* · *Congelados* · *Otros*) · *Máquinas* · *Utensilios* · *Menaje* · *Limpieza* · *Otros* |
 
 Cada ficha lleva al lado el número de puntos que hay dentro, contando ya el filtro de
 estado que tengas puesto. Si una categoría está vacía, su ficha se ve apagada.
@@ -170,24 +175,35 @@ primera vez que alguien abre esa pestaña; no hay que tocar nada en Firebase.
 
 ### Añadir o cambiar categorías
 
-Las categorías están en el objeto `CATS` de `index.html`:
+Hay **dos juegos de categorías** en `index.html`, `CATS_SALA` (para General y Coctelería) y
+`CATS_COCINA`. Cada sección elige el suyo con la clave `cats` de `SECTIONS`
+(`cats: 'sala'` o `cats: 'cocina'`):
 
 ```js
-const CATS = {
-  bebidas:    { label: 'Bebidas',    subs: { refrescos: 'Refrescos', vinos: 'Vinos', licores: 'Licores', otros: 'Otras' } },
-  utensilios: { label: 'Utensilios', subs: null },
-  otros:      { label: 'Otros',      subs: null }
+const CATS_COCINA = {
+  genero:   { label: 'Género',   subs: { salsas: 'Salsas', charcuteria: 'Charcutería', congelados: 'Congelados', otros: 'Otros' } },
+  maquinas: { label: 'Máquinas', subs: null },
+  ...
 };
 ```
 
 Con meter una entrada más ya aparece sola en los filtros y en el desplegable de cada punto:
 no hay que tocar nada más. `subs: null` significa que esa categoría no tiene subfiltros.
+**Todos los juegos deben tener una categoría `otros`**, que es donde cae lo que no encaja.
 
-Justo debajo está `REGLAS`, que es la lista de palabras con la que se adivina la categoría
-de lo que se apunta nuevo. **Se miran en orden y gana la primera que encaje**, así que lo
-específico va arriba. Las palabras se comparan **enteras**, no por trozos — por eso
-"colador" no cae en refrescos por contener "cola", ni "salsa" en otros por contener "sal".
-Si añades una categoría nueva, añádele también su regla o todo lo suyo caerá en *Otros*.
+Debajo están `REGLAS_SALA` y `REGLAS_COCINA`, las listas de palabras con las que se adivina
+la categoría de lo que se apunta nuevo. **Se miran en orden y gana la primera que encaje**,
+así que lo específico va arriba: en cocina, `menaje` va antes que `genero` para que
+"Platos jamón" sea un plato y no charcutería, y `maquinas` va de las primeras para que
+"jamonero" sea la máquina y no el jamón.
+
+Las palabras se comparan **enteras**, no por trozos — por eso "colador" no cae en refrescos
+por contener "cola", ni "salsa" en otros por contener "sal". Si añades una categoría nueva,
+añádele también su regla o todo lo suyo caerá en *Otros*.
+
+Si un punto tiene guardada una categoría que no existe en la pestaña donde se ve (por
+ejemplo algo movido de General a Cocina, con `cat: "bebidas"`), la app la ignora y lo
+reclasifica con las reglas de esa pestaña. No se rompe nada.
 
 ---
 

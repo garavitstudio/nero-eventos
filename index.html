@@ -438,24 +438,35 @@ const db = getFirestore(app);
 
 // Para añadir o renombrar una pestaña, toca solo este array.
 const SECTIONS = [
-  { key: 'general',    title: 'General',    label: 'General',      note: '(material y suministros generales del evento)' },
-  { key: 'cocteleria', title: 'Coctelería', label: 'José Alexis',  note: '(por si quieren apuntar algo, desgraciados)' },
-  { key: 'cocina',     title: 'Cocina',     label: 'Jordan',       note: '(por si quieren apuntar algo, desgraciados)' }
+  { key: 'general',    title: 'General',    label: 'General',      cats: 'sala',   note: '(material y suministros generales del evento)' },
+  { key: 'cocteleria', title: 'Coctelería', label: 'José Alexis',  cats: 'sala',   note: '(por si quieren apuntar algo, desgraciados)' },
+  { key: 'cocina',     title: 'Cocina',     label: 'Jordan',       cats: 'cocina', note: '(por si quieren apuntar algo, desgraciados)' }
 ];
 
 const NAME_STORAGE_KEY = 'nero-eventos:nombre';
 
-// Categorías. Solo "bebidas" tiene subcategorías; para añadir una nueva basta con
-// meterla aquí y aparece sola en los filtros y en el selector de cada punto.
-const CATS = {
+// Categorías, por juego. Sala (general y coctelería) y cocina no tienen nada que ver:
+// lo que a Jordan le sirve es máquinas / género / menaje, no vinos y licores.
+// Para añadir una categoría basta con meterla aquí: aparece sola en los filtros y en
+// el selector de cada punto. `subs: null` = sin subfiltros.
+const CATS_SALA = {
   bebidas:    { label: 'Bebidas',    subs: { refrescos: 'Refrescos', vinos: 'Vinos', licores: 'Licores', otros: 'Otras' } },
   utensilios: { label: 'Utensilios', subs: null },
   otros:      { label: 'Otros',      subs: null }
 };
 
+const CATS_COCINA = {
+  genero:     { label: 'Género',     subs: { salsas: 'Salsas', charcuteria: 'Charcutería', congelados: 'Congelados', otros: 'Otros' } },
+  maquinas:   { label: 'Máquinas',   subs: null },
+  utensilios: { label: 'Utensilios', subs: null },
+  menaje:     { label: 'Menaje',     subs: null },
+  limpieza:   { label: 'Limpieza',   subs: null },
+  otros:      { label: 'Otros',      subs: null }
+};
+
 // Reglas de clasificación automática para lo que se apunte de nuevo. Se miran en
 // orden y gana la primera que encaje, así que lo más específico va arriba.
-const REGLAS = [
+const REGLAS_SALA = [
   { cat: 'bebidas', sub: 'licores', kw: ['ron','barcelo','bacardi','ginebra','gin','beefeater','tanqueray','larios','seagrams','whisky','whiskey','ballantines','jb','dyc','vodka','absolut','smirnoff','martini','vermut','vermouth','licor','tequila','brandy','conac','cognac','orujo','pacharan','anis','cointreau','curacao','amaretto','baileys','jager','absenta','cazalla','ponche','chinchon'] },
   { cat: 'bebidas', sub: 'vinos',     kw: ['vino','vinos','verdejo','yllera','hillera','tinto','tintos','blanco','rioja','ribera','albarino','rueda','cava','champagne','champan','espumoso','rosado','crianza','reserva','godello','tempranillo','moscatel','sidra','sangria','tinto de verano'] },
   { cat: 'bebidas', sub: 'refrescos', kw: ['agua','aguas','pepsi','coca','cola','tonica','tonicas','fanta','sprite','refresco','refrescos','zumo','zumos','nestea','aquarius','bitter','kas','schweppes','trina','gaseosa','limonada','mosto','energetica','isotonica'] },
@@ -464,6 +475,31 @@ const REGLAS = [
   { cat: 'utensilios', sub: null, kw: ['vaso','vasos','copa','copas','cubilete','cubiletes','chupito','chupitos','cubierto','cubiertos','tenedor','tenedores','cuchillo','cuchillos','cuchara','cucharas','cucharita','cucharilla','servilleta','servilletas','mantel','manteles','bandeja','bandejas','cubitera','cubiteras','pinza','pinzas','palillo','palillos','coctelera','jarra','jarras','abridor','descorchador','sacacorchos','colador','cubo','cubos','bayeta','bayetas','balleta','balletas','trapo','trapos','delantal','plato','platos','fuente','cuenco','bol','dosificador','posavasos','pajita','pajitas','canita','canitas','removedor','hielera','botellero','tabla','exprimidor','jigger','medidor','papel','rollo','bolsa','bolsas','limpia','limpiamanos','toallita','toallitas','mechero','encendedor','velas','cinta','tijeras','rotulador'] },
   { cat: 'otros', sub: null, kw: ['fruta','frutas','naranja','naranjas','limon','limones','lima','limas','menta','hierbabuena','hielo','sal','pimienta','azucar','especia','especias','condimento','aceite','vinagre','salsa','decoracion','adorno','flores'] }
 ];
+
+// Ojo con el orden aquí: "Platos jamón" es menaje, no charcutería, así que menaje va
+// antes que género. Y "jamonero" es máquina, por eso máquinas va de las primeras.
+const REGLAS_COCINA = [
+  { cat: 'genero', sub: 'salsas', kw: ['salsa','salsas','biberon','biberones','mayonesa','ketchup','mostaza','siracha','sriracha','alioli','vinagreta','bbq','barbacoa','emulsion'] },
+  { cat: 'maquinas', sub: null, kw: ['plancha','freidora','tostadora','jamonero','horno','microondas','nevera','arcon','congelador','cafetera','lavavajillas','campana','gratinadora','abatidor','cortadora','envasadora','batidora','termomix','vitro','fogon','fogones','bombona'] },
+  { cat: 'menaje', sub: null, kw: ['plato','platos','vaso','vasos','copa','copas','chupito','chupitos','taza','tazas','fuente','fuentes','bandeja','bandejas','cubierto','cubiertos','portacubiertos','porta','servilletero','servilleteros','servilleta','servilletas','mantel','manteles','jarra','jarras','cuenco','bol','posavasos','vajilla','cristaleria'] },
+  { cat: 'utensilios', sub: null, kw: ['tabla','tablas','cuchillo','cuchillos','manta','mantas','espatula','espatulas','pinza','pinzas','abridor','abridores','sacacorchos','corchos','medidor','jigger','coctelera','escurridor','colador','exprimidor','cazo','cazos','sarten','sartenes','olla','ollas','pelador','rallador','tijeras','cucharon','espumadera','termometro','tupper','tuppers','gastronorm','cubitera','hielera','palillo','palillos','mortero','embudo','pinchos','brochetas'] },
+  { cat: 'limpieza', sub: null, kw: ['papel','rollo','bolsa','bolsas','basura','balleta','balletas','bayeta','bayetas','lito','litos','trapo','trapos','estropajo','detergente','lejia','guantes','film','aluminio','delantal','fregona','cubo','desengrasante'] },
+  { cat: 'genero', sub: 'congelados', kw: ['croqueta','croquetas','minihamburguesa','minihamburguesas','hamburguesa','hamburguesas','congelado','congelados','nugget','nuggets','empanadilla','empanadillas','tequenos'] },
+  { cat: 'genero', sub: 'charcuteria', kw: ['jamon','lomo','iberico','ibericos','queso','quesos','quezo','quezos','brie','chorizo','salchichon','embutido','embutidos','cecina','curado','paleta','mortadela','pate'] },
+  { cat: 'genero', sub: 'otros', kw: ['pan','panes','picos','tosta','tostas','tostada','tostadas','mermelada','cebolla','caramelizada','bocadillo','bocadillos','fruta','limon','limones','naranja','naranjas','aceite','vinagre','sal','pimienta','azucar','huevo','huevos','verdura','verduras','carne','pescado','marisco','bacalao','ensalada','patata','patatas','arroz','pasta','especia','especias','genero','comida'] }
+];
+
+const CAT_SETS = {
+  sala:   { cats: CATS_SALA,   reglas: REGLAS_SALA },
+  cocina: { cats: CATS_COCINA, reglas: REGLAS_COCINA }
+};
+
+// El juego de categorías depende de la pestaña abierta
+function juegoActual() {
+  const s = SECTIONS.find(x => x.key === currentSection);
+  return CAT_SETS[(s && s.cats) || 'sala'];
+}
+function CATS_() { return juegoActual().cats; }
 
 function normalizar(t) {
   return (t || '').toLowerCase()
@@ -474,33 +510,39 @@ function normalizar(t) {
 
 // Clasifica por palabras completas: así "colador" no cae en refrescos por "cola",
 // ni "salsa" en otros por "sal".
-function clasificar(text) {
+function clasificar(text, juego) {
+  const reglas = (juego || juegoActual()).reglas;
   const t = normalizar(text);
-  for (const regla of REGLAS) {
+  for (const regla of reglas) {
     for (const kw of regla.kw) {
       if (new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(t)) {
         return { cat: regla.cat, sub: regla.sub };
       }
     }
   }
-  return { cat: 'otros', sub: null };
+  return { cat: 'otros', sub: null };   // "otros" existe en todos los juegos
 }
 
 // Los puntos apuntados antes de que existieran los filtros no tienen categoría
 // guardada: se les calcula al vuelo, sin escribir en Firestore (si no, cada móvil
 // que abriera la app dispararía una escritura).
 function catDe(item) {
+  const CATS = CATS_();
+  // Una categoría guardada que no exista en esta pestaña (p. ej. "bebidas" en cocina)
+  // se ignora y se reclasifica con las reglas de aquí.
   if (item.cat && CATS[item.cat]) return item.cat;
   return clasificar(item.text).cat;
 }
 function subDe(item) {
+  const CATS = CATS_();
   const cat = catDe(item);
   if (!CATS[cat].subs) return null;
-  if (item.cat && item.sub && CATS[cat].subs[item.sub]) return item.sub;
+  if (item.cat === cat && item.sub && CATS[cat].subs[item.sub]) return item.sub;
   const auto = clasificar(item.text);
   return auto.cat === cat && auto.sub ? auto.sub : 'otros';
 }
 function nombreCat(item) {
+  const CATS = CATS_();
   const cat = catDe(item), sub = subDe(item);
   return CATS[cat].label + (sub ? ' · ' + CATS[cat].subs[sub] : '');
 }
@@ -517,6 +559,7 @@ let fCat = 'todas';
 let fSub = 'todas';
 
 const b = (text, done, cat, sub) => ({ text, done, cat, sub });
+const c = (text, cat, sub) => ({ text, done: false, cat, sub });   // lo de Jordan arranca sin marcar
 
 const SEED_GENERAL = [
   b('3 botellas de Verdejo', true, 'bebidas', 'vinos'),
@@ -555,13 +598,61 @@ const SEED_COCTELERIA = [
   b('cucharita larga', false, 'utensilios', null)
 ];
 
-const SEEDS = { general: SEED_GENERAL, cocteleria: SEED_COCTELERIA };
+// Lista de Jordan (catering Santa Marta). Se le han quitado los puntos que ya estaban
+// apuntados en General o en José Alexis, aunque los llamara de otra manera: limones y
+// naranjas (ya está "Fruta: naranja y limón"), hielera (= "2 Cubiteras"), servilletas
+// húmedas de limón (= "limpia manos de limón"), y los repetidos con el mismo nombre.
+const SEED_COCINA = [
+  c('Plancha', 'maquinas', null),
+  c('freidora', 'maquinas', null),
+  c('Tostadora', 'maquinas', null),
+  c('jamonero', 'maquinas', null),
+  c('Tablas de cortar', 'utensilios', null),
+  c('mantas Cuchillos', 'utensilios', null),
+  c('abridores saca corchos', 'utensilios', null),
+  c('espátulas', 'utensilios', null),
+  c('medidor de cócteles', 'utensilios', null),
+  c('escurridor', 'utensilios', null),
+  c('vasos', 'menaje', null),
+  c('vasos chupitos', 'menaje', null),
+  c('Platos de cafe', 'menaje', null),
+  c('Platos negros', 'menaje', null),
+  c('Platos jamon', 'menaje', null),
+  c('platos pequeños', 'menaje', null),
+  c('porta cubiertos', 'menaje', null),
+  c('servilleteros', 'menaje', null),
+  c('papel cocina', 'limpieza', null),
+  c('bolsas de basura', 'limpieza', null),
+  c('litos', 'limpieza', null),
+  c('Biberón salsa tomate', 'genero', 'salsas'),
+  c('Biberón salsa mayonesa', 'genero', 'salsas'),
+  c('Biberón salsa ketchup', 'genero', 'salsas'),
+  c('Biberón salsa verde', 'genero', 'salsas'),
+  c('Biberón salsa siracha', 'genero', 'salsas'),
+  c('Biberón salsa Nero', 'genero', 'salsas'),
+  c('Biberón salsa Emulsión', 'genero', 'salsas'),
+  c('Biberón salsa mostaza', 'genero', 'salsas'),
+  c('quezo brie', 'genero', 'charcuteria'),
+  c('quezos 4 de cada', 'genero', 'charcuteria'),
+  c('lomo iberico', 'genero', 'charcuteria'),
+  c('croquetas jamón 200 ud', 'genero', 'congelados'),
+  c('croquetas bacalao 200 ud', 'genero', 'congelados'),
+  c('minihamburguesas ternera 219', 'genero', 'congelados'),
+  c('picos tostás', 'genero', 'otros'),
+  c('mermelada', 'genero', 'otros'),
+  c('pan Bocadillos', 'genero', 'otros'),
+  c('cebolla caramelizada', 'genero', 'otros')
+];
+
+const SEEDS = { general: SEED_GENERAL, cocteleria: SEED_COCTELERIA, cocina: SEED_COCINA };
+
+const AUTORES = { general: 'Selu', cocteleria: 'Selu', cocina: 'Jordan' };
 
 function seedFor(sectionKey) {
   const seed = SEEDS[sectionKey];
   if (!seed) return [];
   const now = Date.now();
-  return seed.map(i => ({ ...i, author: 'Selu', createdAt: now, history: [] }));
+  return seed.map(i => ({ ...i, author: AUTORES[sectionKey] || 'Selu', createdAt: now, history: [] }));
 }
 
 function docRefFor(sectionKey) {
@@ -695,6 +786,7 @@ function cuenta(fn) {
 }
 
 function renderFiltros() {
+  const CATS = CATS_();
   const seg = document.getElementById('filterEstado');
   seg.innerHTML = '';
   [['todos', 'Todos'], ['pendientes', 'Pendientes'], ['tachados', 'Tachados']].forEach(([k, label]) => {
@@ -817,6 +909,7 @@ function render() {
       const meta = document.createElement('div');
       meta.className = 'item-meta';
 
+      const CATS = CATS_();
       const sel = document.createElement('select');
       sel.className = 'cat-select';
       sel.setAttribute('aria-label', 'Categoría');
