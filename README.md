@@ -187,23 +187,17 @@ que haría que el equipo dejara de usarlo.
 
 ## Despliegue
 
-Repo: **https://github.com/garavitstudio/nero-eventos** (privado).
+Repo: **https://github.com/garavitstudio/nero-eventos** (público).
 
 Alojado en **Vercel**, plan Hobby (gratis), conectado a este repo de GitHub. Al ser un
 sitio estático no lleva configuración de build (framework preset *Other*): Vercel sirve
-`index.html` tal cual desde la raíz.
+`index.html` tal cual desde la raíz. Cada `git push` a `main` redespliega solo.
 
-### Primer despliegue (solo una vez)
-
-1. Entrar en [vercel.com/new](https://vercel.com/new) con la cuenta de GitHub
-   (`garavitstudio`).
-2. Buscar **`nero-eventos`** en la lista de repos e **Import**. Como es privado, la
-   primera vez Vercel pedirá permiso para acceder a él — hay que dárselo.
-3. **No tocar nada** de la configuración: framework preset *Other*, sin build command, sin
-   output directory.
-4. **Deploy**. En unos segundos sale la URL, que es la que se pasa por WhatsApp.
-
-A partir de ahí, cada `git push` a `main` redespliega solo.
+**El repo tiene que seguir siendo público.** El plan Hobby de Vercel no despliega desde
+repos privados; con el repo en privado los builds no llegan a ejecutarse y la web se queda
+servida con la versión anterior sin dar ningún error visible. Que sea público no expone
+nada: lo único parecido a una credencial que hay en el código son las claves de cliente de
+Firebase, que son públicas por diseño (ver arriba).
 
 Cosas del plan gratis que conviene tener escritas:
 
