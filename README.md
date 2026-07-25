@@ -30,6 +30,9 @@ Tres pestañas independientes, cada una con su propia lista:
 | **Coctelería** (José Alexis) | Lo que necesite la barra |
 | **Cocina** (Jordan) | Lo que necesite la cocina |
 
+Encima de las pestañas hay un **buscador que mira las tres a la vez** y un aviso de
+**artículos repetidos** entre listas — ver [Buscador](#buscador).
+
 Qué se puede hacer con cada punto de la lista:
 
 - **Marcarlo / desmarcarlo** con el círculo de la izquierda. El texto se tacha, no
@@ -41,6 +44,35 @@ Qué se puede hacer con cada punto de la lista:
 Debajo de cada punto queda escrito quién lo apuntó y el historial completo de cambios:
 quién lo marcó, quién lo desmarcó y quién cambió qué por qué. **Ese historial no se borra
 nunca**, es a propósito.
+
+### Buscador
+
+Arriba del todo, encima de las pestañas, hay un buscador que **mira las tres listas a la
+vez**. Está fuera de las pestañas a propósito: la gracia es no tener que acordarse de en
+cuál apuntó cada uno lo suyo. Mientras se escribe, la pestaña abierta se aparta y salen los
+resultados de las tres, cada uno con la etiqueta de la lista a la que pertenece. **Se toca
+un resultado y te lleva a su lista**, con el punto parpadeando un momento para no perderlo
+de vista.
+
+Lo importante: **no busca solo lo que está escrito igual**. Cada uno llama a las cosas de
+una manera y las escribe como le sale, así que buscando `queso` salen también los
+`quezo brie` y `quezos 4 de cada` de Jordan, y buscando `bayetas` sale `balletas`. Los que
+no coinciden letra por letra vienen marcados como **Parecido**.
+
+### Artículos que se repiten
+
+Debajo del buscador aparece un botón con un número — **Artículos que se repiten 2** —
+cuando la app encuentra puntos de las tres listas que parecen el mismo artículo escrito de
+otra forma. Se toca y salen agrupados, diciendo si están repartidos **entre dos listas**
+(el caso caro: se carga dos veces lo mismo en la furgoneta) o repetidos **dentro de una**.
+Si no hay nada raro, el botón no aparece.
+
+No borra ni junta nada por su cuenta, solo avisa: a veces dos cosas parecidas son dos cosas
+distintas de verdad, y eso solo lo sabe quien está montando el evento.
+
+Lo mismo pasa al apuntar algo nuevo: mientras se escribe en la caja de añadir, si eso ya
+está en alguna lista sale debajo un aviso *"Puede que ya esté apuntado: «quezos 4 de cada»
+en Cocina"*, y se puede tocar para ir a verlo. **Nunca impide apuntarlo.**
 
 ### Filtros
 
@@ -88,9 +120,14 @@ vanilla. Se abre con datos móviles en un almacén, así que pesa lo mínimo.
 
 Los datos viven en **Firebase Firestore**, una base de datos en la nube de Google. El
 navegador habla directamente con Firestore usando el SDK web que se carga desde CDN, y se
-queda escuchando el documento de la sección abierta con `onSnapshot`: cuando alguien
-guarda un cambio desde otro móvil, Google lo empuja a todos los que están mirando esa
-misma lista y la pantalla se actualiza sola.
+queda escuchando los tres documentos con `onSnapshot`: cuando alguien guarda un cambio
+desde otro móvil, Google lo empuja a todos los que están mirando y la pantalla se
+actualiza sola.
+
+**Se escuchan las tres listas a la vez, no solo la pestaña abierta.** El buscador y el
+detector de repetidos las necesitan todas, y son tres documentos pequeños: cuesta
+prácticamente lo mismo que escuchar uno. De regalo, cambiar de pestaña ya no espera a
+Firestore, es instantáneo.
 
 **Por qué no hay backend propio.** Un servidor intermedio aquí solo añadiría trabajo: otra
 pieza que desplegar, que mantener, que se puede caer y que hay que pagar o vigilar. Como
@@ -204,6 +241,39 @@ añádele también su regla o todo lo suyo caerá en *Otros*.
 Si un punto tiene guardada una categoría que no existe en la pestaña donde se ve (por
 ejemplo algo movido de General a Cocina, con `cat: "bebidas"`), la app la ignora y lo
 reclasifica con las reglas de esa pestaña. No se rompe nada.
+
+### Cómo decide la app que dos cosas son el mismo artículo
+
+Está todo en el bloque *Motor de parecidos* de `index.html`, y no usa ninguna librería.
+De cada texto se saca una lista de palabras y se compara palabra con palabra:
+
+1. **Se tira lo que no es el artículo.** Números (`200 ud`, `3 cajas`), palabras de relleno
+   (`de`, `para`, `cada`, en `RELLENO`) y los envases y medidas de `ENVASE`, que dicen
+   cuánto y no qué: por eso *"4 cajas de agua"* y *"agua"* son lo mismo. Ojo con tocar
+   `ENVASE`: **`bandeja` y `bolsa` no están ahí** aunque lo parezcan, porque en estas
+   listas son artículos de pleno derecho.
+2. **Se comparan por cómo suenan, no por cómo se escriben** (`fonetica()`). Se quitan los
+   plurales y se juntan las confusiones de escribir deprisa en el móvil: z/s/c, b/v, ll/y,
+   la h muda, qu/k, g/j. Así *"quezo"* = *"queso"* y *"balletas"* = *"bayetas"*. Lo que no
+   se arregla así se compara por distancia de edición, perdonando poco más de una letra —
+   y en palabras de menos de cinco letras no se perdona nada, porque *"sal"* y *"sol"* no
+   son lo mismo.
+3. **Cada palabra pesa lo que distingue** (`recalcularPesos()`). El peso no está escrito a
+   mano: sale de contar en cuántos puntos de las tres listas aparece cada palabra. `salsa`
+   y `biberón`, que salen en ocho puntos de la cocina, no dicen nada; `brie`, que sale una
+   vez, es justo lo que separa un queso de otro. **Sin esto, los ocho "Biberón salsa X" de
+   Jordan saldrían como repetidos entre sí**, que era el problema al montar esto.
+4. Si **todo** lo que dice un punto está dentro del otro, se dan por parecidos aunque uno
+   añada cosas: *"limones"* está entero dentro de *"Fruta: naranja y limón"*.
+
+El resultado va de 0 a 1 y el corte está en `UMBRAL_PARECIDO` (0,6). Es el número a tocar
+si algún día avisa de más o de menos: **subirlo** deja pasar cosas que sí eran lo mismo,
+**bajarlo** empieza a emparejar *"Platos de café"* con *"Platos negros"*. Buscar es más
+blando (`UMBRAL_BUSQUEDA`) porque lo que se teclea es un trozo, no un punto entero.
+
+Los repetidos se agrupan en cadena: si A se parece a B y B a C, los tres van al mismo
+montón aunque A y C no se parezcan tanto. Para un aviso es lo que interesa. Se recalculan
+solo cuando cambian los datos, no en cada repintado.
 
 ---
 

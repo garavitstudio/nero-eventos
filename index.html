@@ -376,6 +376,166 @@
     color: #4c473f;
   }
   .conn-status.error { color: #c17d5a; }
+
+  /* ---- Buscador general ---- */
+  .search-block { margin-bottom: 26px; }
+  .search-row { position: relative; }
+  .search-row input { padding-left: 40px; padding-right: 44px; }
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-54%);
+    color: #6b6459;
+    font-size: 19px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .search-clear {
+    position: absolute;
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    min-height: 42px;
+    background: none;
+    border: none;
+    color: #6b6459;
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .search-clear:hover { color: #b08d4f; }
+
+  .dupes-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    min-height: 44px;
+    background: transparent;
+    border: 1px dashed #3a3225;
+    border-radius: 2px;
+    color: #8a8378;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .dupes-btn:hover { border-color: #b08d4f; color: #b08d4f; }
+  .dupes-btn.active { border-style: solid; border-color: #b08d4f; color: #b08d4f; }
+  .dupes-btn .dupes-count { color: #b08d4f; margin-left: 6px; }
+
+  .panel-title {
+    font-size: 11px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #8a8378;
+    margin-bottom: 4px;
+  }
+  .panel-note {
+    font-size: 11px;
+    font-style: italic;
+    color: #565148;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  /* Cada resultado es un botón: se toca y lleva a su lista */
+  .res {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #161513;
+    border: 1px solid #24221e;
+    border-radius: 2px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-family: 'Jost', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .res:hover { border-color: #3a362e; }
+  .res-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 6px;
+  }
+  .res-sec {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #b08d4f;
+    border: 1px solid #3a2f1c;
+    border-radius: 2px;
+    padding: 3px 7px;
+  }
+  .res-tag {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #6b6459;
+  }
+  .res-text {
+    display: block;
+    font-size: 15px;
+    font-weight: 300;
+    color: #e9e4d8;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .res-text.done { text-decoration: line-through; color: #5f5a51; }
+  .res-meta {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #565148;
+    margin-top: 6px;
+  }
+
+  .group {
+    border: 1px solid #24221e;
+    border-radius: 2px;
+    padding: 12px 12px 4px;
+    margin-bottom: 14px;
+  }
+  .group-title {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #b08d4f;
+    margin-bottom: 10px;
+  }
+  .group .res { background: #1b1916; }
+
+  /* El punto al que lleva un resultado parpadea un momento para no perderlo */
+  @keyframes destello {
+    0%, 100% { border-color: #24221e; background: #161513; }
+    15%, 65% { border-color: #b08d4f; background: #1f1c16; }
+  }
+  li.destello { animation: destello 2.4s ease; }
+
+  .dup-hint {
+    display: none;
+    font-size: 11px;
+    font-style: italic;
+    color: #8a8378;
+    line-height: 1.7;
+    margin: -14px 0 20px;
+  }
+  .dup-hint .dup-link {
+    color: #e9e4d8;
+    font-style: normal;
+    text-decoration: underline;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .dup-hint .dup-link:hover { color: #b08d4f; }
 </style>
 </head>
 <body>
@@ -388,6 +548,19 @@
   <div class="conn-status" id="connStatus">Conectando...</div>
   <div class="divider"></div>
 
+  <!-- El buscador está fuera de las pestañas a propósito: mira las tres listas -->
+  <div class="search-block">
+    <div class="search-row">
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <input type="text" id="searchInput" placeholder="Buscar en las tres listas..." enterkeyhint="search" autocomplete="off" />
+      <button class="search-clear" id="searchClear" type="button" aria-label="Limpiar búsqueda" hidden>✕</button>
+    </div>
+    <button class="dupes-btn" id="dupesBtn" type="button" hidden></button>
+  </div>
+
+  <div id="searchPanel" hidden></div>
+
+  <div id="sectionArea">
   <div class="tabs" id="tabs"></div>
   <div class="section-note" id="sectionNote"></div>
 
@@ -402,6 +575,7 @@
     <button class="add-btn" id="addBtn" type="button">Añadir</button>
   </div>
   <div class="add-note" id="addNote"></div>
+  <div class="dup-hint" id="dupHint"></div>
 
   <div class="filters">
     <div class="seg" id="filterEstado"></div>
@@ -414,6 +588,7 @@
   <ul id="list"></ul>
   <div class="status" id="status">Cargando...</div>
   <div class="hint">Toca el texto de un punto para editar la cantidad</div>
+  </div>
 </div>
 
 <script type="module">
@@ -494,12 +669,15 @@ const CAT_SETS = {
   cocina: { cats: CATS_COCINA, reglas: REGLAS_COCINA }
 };
 
-// El juego de categorías depende de la pestaña abierta
-function juegoActual() {
-  const s = SECTIONS.find(x => x.key === currentSection);
+// El juego de categorías depende de la pestaña. Casi siempre es la abierta, pero
+// el buscador pinta puntos de las tres, y cada uno hay que leerlo con las categorías
+// de su lista (lo que en cocina es "Género" en general no existe).
+function juegoDe(sectionKey) {
+  const s = SECTIONS.find(x => x.key === sectionKey);
   return CAT_SETS[(s && s.cats) || 'sala'];
 }
-function CATS_() { return juegoActual().cats; }
+function juegoActual() { return juegoDe(currentSection); }
+function CATS_(sectionKey) { return juegoDe(sectionKey || currentSection).cats; }
 
 function normalizar(t) {
   return (t || '').toLowerCase()
@@ -526,31 +704,227 @@ function clasificar(text, juego) {
 // Los puntos apuntados antes de que existieran los filtros no tienen categoría
 // guardada: se les calcula al vuelo, sin escribir en Firestore (si no, cada móvil
 // que abriera la app dispararía una escritura).
-function catDe(item) {
-  const CATS = CATS_();
+function catDe(item, sectionKey) {
+  const CATS = CATS_(sectionKey);
   // Una categoría guardada que no exista en esta pestaña (p. ej. "bebidas" en cocina)
   // se ignora y se reclasifica con las reglas de aquí.
   if (item.cat && CATS[item.cat]) return item.cat;
-  return clasificar(item.text).cat;
+  return clasificar(item.text, juegoDe(sectionKey || currentSection)).cat;
 }
-function subDe(item) {
-  const CATS = CATS_();
-  const cat = catDe(item);
+function subDe(item, sectionKey) {
+  const juego = juegoDe(sectionKey || currentSection);
+  const CATS = juego.cats;
+  const cat = catDe(item, sectionKey);
   if (!CATS[cat].subs) return null;
   if (item.cat === cat && item.sub && CATS[cat].subs[item.sub]) return item.sub;
-  const auto = clasificar(item.text);
+  const auto = clasificar(item.text, juego);
   return auto.cat === cat && auto.sub ? auto.sub : 'otros';
 }
-function nombreCat(item) {
-  const CATS = CATS_();
-  const cat = catDe(item), sub = subDe(item);
+function nombreCat(item, sectionKey) {
+  const CATS = CATS_(sectionKey);
+  const cat = catDe(item, sectionKey), sub = subDe(item, sectionKey);
   return CATS[cat].label + (sub ? ' · ' + CATS[cat].subs[sub] : '');
 }
 
+/* ---------------------------------------------------------------------------
+   Motor de parecidos
+
+   El problema real de estas listas: el mismo artículo lo escribe cada uno a su
+   manera — "quezos 4 de cada", "Queso brie", "4 quesos" — y acaba apuntado dos
+   veces en dos pestañas distintas. Para saber si dos puntos hablan del mismo
+   artículo hay que quitarles lo que no es el artículo (cantidades, envases,
+   palabras de relleno) y comparar lo que queda por cómo suena, no por cómo se
+   escribe.
+--------------------------------------------------------------------------- */
+
+// Palabras que no dicen nada del artículo
+const RELLENO = new Set([
+  'de','del','la','el','lo','los','las','un','una','unos','unas','y','e','o','u',
+  'con','sin','para','por','en','al','a','cada','mas','tipo','varios','varias',
+  'aprox','algo','algun','alguna','tambien','otro','otra','otros','otras'
+]);
+
+// Plurales fuera: "limones" y "limón" son lo mismo. En palabras cortas no se toca
+// ("gas" no es "ga").
+function singular(s) {
+  if (s.length > 4 && s.endsWith('es')) return s.slice(0, -2);
+  if (s.length > 3 && s.endsWith('s')) return s.slice(0, -1);
+  return s;
+}
+
+// Clave de cómo suena una palabra en español. Junta las confusiones típicas al
+// escribir deprisa en el móvil: z/s/c ("quezo" = "queso"), b/v y ll/y
+// ("balletas" = "bayetas"), la h muda, qu/k, g/j.
+function fonetica(palabra) {
+  let s = singular(palabra.replace(/[^a-z0-9]/g, ''));
+  if (!s) return '';
+  return s
+    .replace(/ch/g, '1')          // la "ch" es un sonido propio: se aparta antes de tocar las haches
+    .replace(/h/g, '')
+    .replace(/qu/g, 'k')
+    .replace(/c([ei])/g, 's$1')   // "cerveza" suena "serveza"
+    .replace(/[qck]/g, 'k')
+    .replace(/z/g, 's')
+    .replace(/x/g, 's')
+    .replace(/v/g, 'b')
+    .replace(/ll/g, 'y')
+    .replace(/g([ei])/g, 'j$1')
+    .replace(/(.)\1+/g, '$1')     // letras dobladas
+    .replace(/1/g, 'ch');
+}
+
+// Envases y medidas: dicen cuánto, no qué. "3 cajas de agua" y "agua" son lo mismo,
+// así que estas palabras pesan poco. Ojo: aquí no van "bandeja" ni "bolsa", que en
+// estas listas son artículos de pleno derecho.
+const ENVASE = new Set([
+  'caja','botella','bote','lata','paquete','pack','barril','kilo','kg','gramo','gr',
+  'litro','cl','ml','docena','unidad','ud','uds','media','medio','par'
+].map(fonetica));
+
+// Trocear un texto sale caro y se repite mucho (cada comparación, cada tecla en el
+// buscador), así que se guarda hecho.
+const cacheTokens = new Map();
+
+function tokens(text) {
+  const yaHecho = cacheTokens.get(text);
+  if (yaHecho) return yaHecho;
+
+  const out = [], vistos = new Set();
+  for (let bruto of normalizar(text).split(/[^a-z0-9]+/)) {
+    if (!bruto) continue;
+    bruto = bruto.replace(/^\d+/, '');       // "200ud", "2kg": la cifra no dice qué artículo es
+    if (!bruto || RELLENO.has(bruto)) continue;
+    const clave = fonetica(bruto);
+    if (!clave || vistos.has(clave)) continue;
+    vistos.add(clave);
+    out.push({ clave, envase: ENVASE.has(clave) });
+  }
+
+  if (cacheTokens.size > 600) cacheTokens.clear();
+  cacheTokens.set(text, out);
+  return out;
+}
+
+// Cuánto distingue cada palabra, medido sobre las propias listas: si "salsa" y
+// "biberón" salen en ocho puntos, no sirven para saber cuál es cuál; "brie", que
+// sale una vez, es justo lo que separa un queso de otro. Sin esto los ocho
+// "Biberón salsa X" de Jordan saldrían como repetidos entre sí.
+let docsTotales = 1;
+let frecuencia = new Map();
+
+function recalcularPesos() {
+  const df = new Map();
+  let n = 0;
+  SECTIONS.forEach(s => {
+    (store[s.key] || []).forEach(item => {
+      n++;
+      tokens(item.text).forEach(t => df.set(t.clave, (df.get(t.clave) || 0) + 1));
+    });
+  });
+  docsTotales = Math.max(n, 1);
+  frecuencia = df;
+}
+
+function pesoDe(t) {
+  const df = frecuencia.get(t.clave) || 0;
+  const peso = Math.log((docsTotales + 1) / (df + 1)) + 0.4;
+  return t.envase ? peso * 0.35 : peso;
+}
+
+function distancia(a, b) {
+  const m = a.length, n = b.length;
+  if (!m || !n) return m || n;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const fila = [i];
+    for (let j = 1; j <= n; j++) {
+      fila[j] = Math.min(prev[j] + 1, fila[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = fila;
+  }
+  return prev[n];
+}
+
+// Dos palabras se dan por la misma si suenan igual o si se diferencian en poco más
+// de una letra. En las cortas no se perdona nada: "sal" y "sol" no son lo mismo.
+function parecidoPalabra(a, b) {
+  if (a === b) return 1;
+  const max = Math.max(a.length, b.length);
+  if (max < 5) return 0;
+  const r = 1 - distancia(a, b) / max;
+  return r >= 0.8 ? r : 0;
+}
+
+// Por debajo de esto salen parejas que no vienen a cuento ("Platos de café" con
+// "Platos negros"); por encima se escapan los repetidos de verdad.
+const UMBRAL_PARECIDO = 0.6;
+
+// 0 = no tienen nada que ver, 1 = es lo mismo escrito de otra forma.
+function similitud(textoA, textoB) {
+  const A = tokens(textoA), B = tokens(textoB);
+  if (!A.length || !B.length) return 0;
+
+  const suma = (X, Y) => X.reduce((acc, x) =>
+    acc + pesoDe(x) * Y.reduce((m, y) => Math.max(m, parecidoPalabra(x.clave, y.clave)), 0), 0);
+  const total = X => X.reduce((acc, x) => acc + pesoDe(x), 0);
+
+  const sA = suma(A, B), sB = suma(B, A);
+  const tA = total(A), tB = total(B);
+  const parecido = (sA + sB) / (tA + tB);
+
+  // Cuando todo lo que dice un punto está dentro del otro hablan del mismo
+  // artículo, aunque uno añada cosas: "limones" está entero dentro de "Fruta:
+  // naranja y limón". Por reparto de pesos eso solo se quedaba en un 0,5.
+  const contenido = (sA / tA > 0.98 && A.some(t => !t.envase)) ||
+                    (sB / tB > 0.98 && B.some(t => !t.envase));
+  return contenido ? Math.max(parecido, UMBRAL_PARECIDO + 0.05) : parecido;
+}
+
+// Buscar es otra cosa: lo que se escribe es un trozo, no un punto entero, así que
+// vale con que cada palabra buscada aparezca en el punto (o empiece igual, para
+// que vaya encontrando mientras se teclea).
+function puntuaBusqueda(consulta, texto) {
+  const q = normalizar(consulta).trim();
+  const t = normalizar(texto);
+  // Lo escrito tal cual, pero solo si empieza una palabra: buscar "ron" tiene que
+  // sacar el ron, no los ocho "biberón" de la cocina.
+  if (q && new RegExp('\\b' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(t)) {
+    return { score: 1, exacto: true };
+  }
+
+  const Q = tokens(consulta), I = tokens(texto);
+  if (!Q.length || !I.length) return { score: 0, exacto: false };
+
+  let suma = 0, total = 0;
+  for (const qt of Q) {
+    const peso = pesoDe(qt);
+    total += peso;
+    let mejor = 0;
+    for (const it of I) {
+      const parcial = qt.clave.length >= 3 && it.clave.startsWith(qt.clave) ? 0.9 : 0;
+      mejor = Math.max(mejor, parcial, parecidoPalabra(qt.clave, it.clave));
+    }
+    suma += peso * mejor;
+  }
+  return { score: total ? suma / total : 0, exacto: false };
+}
+
+const UMBRAL_BUSQUEDA = 0.5;
+
 let currentSection = SECTIONS[0].key;
-let items = [];
-let unsubscribe = null;
-let listenerToken = 0;   // evita que un listener viejo pinte sobre la pestaña nueva
+
+// Las tres listas viven en memoria a la vez, no solo la de la pestaña abierta:
+// el buscador y el detector de repetidos las necesitan todas.
+const store = {};
+SECTIONS.forEach(s => { store[s.key] = []; });
+
+let items = store[currentSection];   // alias de la lista de la pestaña abierta
+let version = 0;                     // sube con cada cambio; invalida lo cacheado
+
+// Estado del buscador
+let consulta = '';
+let verRepetidos = false;
+let resaltado = null;                // punto al que hay que llevar la vista
 
 // Filtros. No se guardan en localStorage a propósito: si alguien abre el link y le
 // saliera media lista por un filtro de la última vez, pensaría que faltan cosas.
@@ -694,44 +1068,49 @@ function quitarFiltros() {
 function switchSection(key) {
   if (key === currentSection) return;
   currentSection = key;
-  items = [];
+  items = store[key];
   // Cada pestaña es una lista distinta: arrastrar el filtro de la anterior solo
   // consigue que parezca vacía sin motivo.
   quitarFiltros();
   renderTabs();
   render();
-  attachListener();
 }
 
-async function attachListener() {
-  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-
-  const token = ++listenerToken;
-  const section = currentSection;
-  const ref = docRefFor(section);
-
-  // Si el documento aún no existe, se crea con su semilla. En transacción para
+async function arrancar() {
+  // Si un documento aún no existe, se crea con su semilla. En transacción para
   // que dos móviles abriendo a la vez no se pisen la lista inicial.
-  try {
-    await runTransaction(db, async (tx) => {
-      const snap = await tx.get(ref);
-      if (!snap.exists()) tx.set(ref, { items: seedFor(section) });
+  await Promise.all(SECTIONS.map(async (s) => {
+    const ref = docRefFor(s.key);
+    try {
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists()) tx.set(ref, { items: seedFor(s.key) });
+      });
+    } catch (e) {
+      setConnStatus('Error de conexión con Firebase', true);
+    }
+  }));
+
+  // Se escuchan las tres a la vez y para siempre, en vez de enganchar y soltar el
+  // listener al cambiar de pestaña. Son tres documentos pequeños: cuesta casi lo
+  // mismo que escuchar uno, y a cambio el buscador tiene todo delante y cambiar de
+  // pestaña es instantáneo.
+  SECTIONS.forEach(s => {
+    onSnapshot(docRefFor(s.key), (snap) => {
+      store[s.key] = (snap.exists() && snap.data().items) || [];
+      if (s.key === currentSection) items = store[s.key];
+      datosCambiados();
+      setConnStatus('Sincronizado en tiempo real', false);
+    }, () => {
+      setConnStatus('Error de conexión con Firebase', true);
     });
-  } catch (e) {
-    setConnStatus('Error de conexión con Firebase', true);
-  }
-
-  if (token !== listenerToken) return;   // el usuario ya cambió de pestaña
-
-  unsubscribe = onSnapshot(ref, (snap) => {
-    if (token !== listenerToken) return;
-    items = (snap.exists() && snap.data().items) || [];
-    setConnStatus('Sincronizado en tiempo real', false);
-    render();
-  }, () => {
-    if (token !== listenerToken) return;
-    setConnStatus('Error de conexión con Firebase', true);
   });
+}
+
+function datosCambiados() {
+  version++;
+  recalcularPesos();
+  render();
 }
 
 async function saveItems() {
@@ -842,7 +1221,23 @@ function renderFiltros() {
   document.getElementById('filterReset').hidden = !hayFiltro();
 }
 
+// Buscando (o mirando los repetidos) se esconde la pestaña entera: sus filtros y su
+// lista son de una sola sección y aquí se está mirando en las tres, así que verlos
+// a la vez solo confunde.
+function modoBusqueda() {
+  return verRepetidos || consulta.trim().length >= 2;
+}
+
 function render() {
+  const buscando = modoBusqueda();
+  document.getElementById('sectionArea').hidden = buscando;
+  document.getElementById('searchPanel').hidden = !buscando;
+  renderBotonRepetidos();
+  if (buscando) renderPanel();
+  else renderLista();
+}
+
+function renderLista() {
   const list = document.getElementById('list');
   const status = document.getElementById('status');
 
@@ -867,9 +1262,14 @@ function render() {
     empty.textContent = 'Nada en este filtro';
     list.appendChild(empty);
   } else {
+    let aResaltar = null;
     items.forEach((item, idx) => {
       if (!pasaFiltro(item)) return;   // idx sigue siendo el real, no el de la vista
       const li = document.createElement('li');
+      if (resaltado && claveItem(item) === resaltado) {
+        li.classList.add('destello');
+        aResaltar = li;
+      }
 
       const checkBtn = document.createElement('button');
       checkBtn.type = 'button';
@@ -969,6 +1369,12 @@ function render() {
       li.appendChild(delBtn);
       list.appendChild(li);
     });
+
+    // Al llegar desde un resultado del buscador, el punto se busca solo
+    if (aResaltar) {
+      resaltado = null;
+      requestAnimationFrame(() => aResaltar.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+    }
   }
 
   const pending = items.filter(i => !i.done).length;
@@ -981,6 +1387,225 @@ function render() {
     status.textContent = hayFiltro() ? `${base} · mostrando ${visibles}` : base;
   }
   renderFiltros();
+}
+
+/* ---------------------------------------------------------------------------
+   Buscador general y repetidos
+--------------------------------------------------------------------------- */
+
+// No hay ids en los puntos, así que para volver a encontrar uno después de repintar
+// se usa cuándo se apuntó + su texto. Con listas de decenas de puntos basta.
+const claveItem = (item) => (item.createdAt || 0) + '|' + item.text;
+
+function tituloSeccion(key) {
+  const s = SECTIONS.find(x => x.key === key);
+  return s ? s.title : key;
+}
+
+// Todos los puntos de las tres listas, cada uno con su sección al lado
+function todosLosPuntos() {
+  const out = [];
+  SECTIONS.forEach(s => (store[s.key] || []).forEach(item => out.push({ item, seccion: s.key })));
+  return out;
+}
+
+function buscar(texto) {
+  const res = [];
+  todosLosPuntos().forEach(p => {
+    const { score, exacto } = puntuaBusqueda(texto, p.item.text);
+    if (score >= UMBRAL_BUSQUEDA) res.push({ item: p.item, seccion: p.seccion, score, exacto });
+  });
+  res.sort((a, b) => (Number(b.exacto) - Number(a.exacto)) || (b.score - a.score));
+  return res;
+}
+
+// Los puntos de cualquier lista que se parezcan a un texto
+function parecidosA(texto, excluir) {
+  return todosLosPuntos()
+    .filter(p => p.item !== excluir)
+    .map(p => ({ item: p.item, seccion: p.seccion, score: similitud(texto, p.item.text) }))
+    .filter(p => p.score >= UMBRAL_PARECIDO)
+    .sort((a, b) => b.score - a.score);
+}
+
+// Se agrupa por cadenas: si A se parece a B y B a C, los tres van al mismo montón
+// aunque A y C no se parezcan tanto entre sí. Para un aviso es lo que interesa.
+let cacheGrupos = null;
+
+function gruposRepetidos() {
+  if (cacheGrupos && cacheGrupos.version === version) return cacheGrupos.grupos;
+
+  const puntos = todosLosPuntos().filter(p => tokens(p.item.text).length > 0);
+  const padre = puntos.map((_, i) => i);
+  const raiz = (i) => { while (padre[i] !== i) { padre[i] = padre[padre[i]]; i = padre[i]; } return i; };
+
+  for (let i = 0; i < puntos.length; i++) {
+    for (let j = i + 1; j < puntos.length; j++) {
+      if (similitud(puntos[i].item.text, puntos[j].item.text) >= UMBRAL_PARECIDO) {
+        padre[raiz(i)] = raiz(j);
+      }
+    }
+  }
+
+  const montones = new Map();
+  puntos.forEach((p, i) => {
+    const r = raiz(i);
+    if (!montones.has(r)) montones.set(r, []);
+    montones.get(r).push(p);
+  });
+
+  const grupos = [...montones.values()].filter(g => g.length > 1);
+  // Delante los que están repartidos entre listas distintas: son los que acaban
+  // cargándose dos veces en la furgoneta.
+  const nListas = g => new Set(g.map(p => p.seccion)).size;
+  grupos.sort((a, b) => (nListas(b) - nListas(a)) || (b.length - a.length));
+
+  cacheGrupos = { version, grupos };
+  return grupos;
+}
+
+function cerrarBusqueda() {
+  consulta = '';
+  verRepetidos = false;
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').hidden = true;
+}
+
+function irAlPunto(p) {
+  cerrarBusqueda();
+  resaltado = claveItem(p.item);
+  if (p.seccion !== currentSection) {
+    switchSection(p.seccion);
+  } else {
+    quitarFiltros();   // si había un filtro que lo dejaba fuera, no se vería al volver
+    render();
+  }
+}
+
+function filaResultado(p, etiqueta) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'res';
+
+  const top = document.createElement('div');
+  top.className = 'res-top';
+  const sec = document.createElement('span');
+  sec.className = 'res-sec';
+  sec.textContent = tituloSeccion(p.seccion);
+  top.appendChild(sec);
+  [etiqueta, p.item.done ? 'Tachado' : null].forEach(t => {
+    if (!t) return;
+    const tag = document.createElement('span');
+    tag.className = 'res-tag';
+    tag.textContent = t;
+    top.appendChild(tag);
+  });
+  btn.appendChild(top);
+
+  const texto = document.createElement('span');
+  texto.className = 'res-text' + (p.item.done ? ' done' : '');
+  texto.textContent = p.item.text;
+  btn.appendChild(texto);
+
+  const meta = document.createElement('span');
+  meta.className = 'res-meta';
+  meta.textContent = nombreCat(p.item, p.seccion) + (p.item.author ? ' · apuntado por ' + p.item.author : '');
+  btn.appendChild(meta);
+
+  btn.onclick = () => irAlPunto(p);
+  return btn;
+}
+
+function renderBotonRepetidos() {
+  const btn = document.getElementById('dupesBtn');
+  const n = gruposRepetidos().length;
+  btn.hidden = n === 0 && !verRepetidos;
+  btn.className = 'dupes-btn' + (verRepetidos ? ' active' : '');
+  btn.textContent = verRepetidos ? 'Volver a la lista' : 'Artículos que se repiten';
+  if (!verRepetidos && n) {
+    const c = document.createElement('span');
+    c.className = 'dupes-count';
+    c.textContent = n;
+    btn.appendChild(c);
+  }
+}
+
+function renderPanel() {
+  const panel = document.getElementById('searchPanel');
+  panel.innerHTML = '';
+
+  const titulo = document.createElement('div');
+  titulo.className = 'panel-title';
+  const nota = document.createElement('div');
+  nota.className = 'panel-note';
+  panel.appendChild(titulo);
+  panel.appendChild(nota);
+
+  const vacio = (texto) => {
+    const el = document.createElement('div');
+    el.className = 'empty';
+    el.textContent = texto;
+    panel.appendChild(el);
+  };
+
+  if (verRepetidos) {
+    const grupos = gruposRepetidos();
+    titulo.textContent = 'Artículos que se repiten';
+    nota.textContent = 'Puntos de las tres listas que parecen el mismo artículo aunque estén escritos de otra forma. Toca uno para ir a su lista.';
+    if (!grupos.length) { vacio('Nada repetido, todo en orden'); return; }
+
+    grupos.forEach(g => {
+      const caja = document.createElement('div');
+      caja.className = 'group';
+      const cab = document.createElement('div');
+      cab.className = 'group-title';
+      const listas = [...new Set(g.map(p => p.seccion))];
+      cab.textContent = listas.length > 1
+        ? 'En ' + listas.map(tituloSeccion).join(' y ')
+        : 'Dentro de ' + tituloSeccion(listas[0]);
+      caja.appendChild(cab);
+      g.forEach(p => caja.appendChild(filaResultado(p, null)));
+      panel.appendChild(caja);
+    });
+    return;
+  }
+
+  const res = buscar(consulta);
+  titulo.textContent = res.length + (res.length === 1 ? ' resultado' : ' resultados');
+  nota.textContent = 'Buscando en las tres listas. Salen también los que están escritos de otra forma. Toca uno para ir a su lista.';
+  if (!res.length) { vacio('Nada que se parezca a «' + consulta.trim() + '»'); return; }
+  res.forEach(p => panel.appendChild(filaResultado(p, p.exacto ? null : 'Parecido')));
+}
+
+/* Aviso de posible repetido mientras se apunta algo nuevo. Nunca bloquea: solo
+   avisa, porque a veces sí que hacen falta dos cosas parecidas. */
+let temporizadorHint = null;
+
+function pintarDupHint(parecidos, prefijo) {
+  const el = document.getElementById('dupHint');
+  clearTimeout(temporizadorHint);
+  el.innerHTML = '';
+  if (!parecidos.length) { el.style.display = 'none'; return; }
+
+  el.appendChild(document.createTextNode(prefijo));
+  parecidos.slice(0, 3).forEach((p, i) => {
+    if (i) el.appendChild(document.createTextNode(' · '));
+    const link = document.createElement('span');
+    link.className = 'dup-link';
+    link.textContent = '«' + p.item.text + '» en ' + tituloSeccion(p.seccion);
+    link.onclick = () => irAlPunto(p);
+    el.appendChild(link);
+  });
+  el.style.display = 'block';
+}
+
+function avisarParecidos(texto, recienAnadido) {
+  if (texto.trim().length < 3) { pintarDupHint([], ''); return; }
+  const parecidos = parecidosA(texto, recienAnadido);
+  pintarDupHint(parecidos, recienAnadido ? 'Ojo, ya había algo parecido: ' : 'Puede que ya esté apuntado: ');
+  if (recienAnadido && parecidos.length) {
+    temporizadorHint = setTimeout(() => { document.getElementById('dupHint').style.display = 'none'; }, 10000);
+  }
 }
 
 function avisoAdd(texto) {
@@ -1005,6 +1630,9 @@ async function addItem() {
 
   // Si el filtro activo lo deja fuera, avisamos en vez de que parezca que no se guardó
   avisoAdd(pasaFiltro(nuevo) ? '' : `Añadido en ${nombreCat(nuevo)}, pero el filtro activo no lo muestra`);
+  // Y si ya había algo parecido en cualquiera de las tres listas, se dice — sin
+  // impedir apuntarlo: a veces hacen falta las dos cosas.
+  avisarParecidos(text, nuevo);
 
   render();
   await saveItems();
@@ -1075,8 +1703,18 @@ whoInput.addEventListener('keydown', (e) => {
 });
 
 document.getElementById('addBtn').addEventListener('click', addItem);
-document.getElementById('newItem').addEventListener('keydown', (e) => {
+const newItemInput = document.getElementById('newItem');
+newItemInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); addItem(); }
+});
+
+// Mientras se escribe se va mirando si eso ya está apuntado en alguna lista. Con un
+// respiro, para no comparar contra todo en cada tecla.
+let temporizadorEscribiendo = null;
+newItemInput.addEventListener('input', () => {
+  clearTimeout(temporizadorEscribiendo);
+  const texto = newItemInput.value;
+  temporizadorEscribiendo = setTimeout(() => avisarParecidos(texto, null), 300);
 });
 
 document.getElementById('filterReset').addEventListener('click', () => {
@@ -1084,9 +1722,34 @@ document.getElementById('filterReset').addEventListener('click', () => {
   render();
 });
 
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('input', () => {
+  consulta = searchInput.value;
+  document.getElementById('searchClear').hidden = !consulta;
+  if (consulta.trim().length >= 2) verRepetidos = false;   // buscar manda sobre los repetidos
+  render();
+});
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); searchInput.blur(); }
+  if (e.key === 'Escape') { cerrarBusqueda(); render(); }
+});
+document.getElementById('searchClear').addEventListener('click', () => {
+  cerrarBusqueda();
+  searchInput.focus();
+  render();
+});
+document.getElementById('dupesBtn').addEventListener('click', () => {
+  const abrir = !verRepetidos;
+  cerrarBusqueda();
+  verRepetidos = abrir;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
 renderTabs();
 renderFiltros();
-attachListener();
+render();
+arrancar();
 </script>
 </body>
 </html>
