@@ -42,6 +42,37 @@ Debajo de cada punto queda escrito quién lo apuntó y el historial completo de 
 quién lo marcó, quién lo desmarcó y quién cambió qué por qué. **Ese historial no se borra
 nunca**, es a propósito.
 
+### Filtros
+
+Sobre la lista hay dos filtros que se combinan, y funcionan igual en las tres pestañas:
+
+1. **Por estado** (la barra de arriba): *Todos* · *Pendientes* · *Tachados*. Para ver de un
+   vistazo lo que falta por cargar.
+2. **Por tipo**: *Bebidas* · *Utensilios* · *Otros*. Al entrar en **Bebidas** aparece una
+   segunda fila con *Refrescos* · *Vinos* · *Licores* · *Otras*.
+
+Cada ficha lleva al lado el número de puntos que hay dentro, contando ya el filtro de
+estado que tengas puesto. Si una categoría está vacía, su ficha se ve apagada.
+
+Con un filtro puesto, el contador de abajo lo dice (`8 pendientes de 28 · mostrando 4`) para
+que nadie piense que se han borrado cosas. El botón **Quitar filtros** lo deja todo a cero.
+**Los filtros no se recuerdan entre visitas** a propósito: si alguien abriera el link y le
+saliera media lista por un filtro del día anterior, pensaría que faltan cosas.
+
+### Categoría de cada punto
+
+Cada punto lleva su categoría en una etiqueta pequeña debajo del texto. **Es un desplegable:
+se toca y se cambia**, con el selector nativo del móvil. Cambiarla queda registrada en el
+historial igual que cualquier otra edición.
+
+Cuando apuntas algo nuevo, la app le pone categoría sola leyendo el texto ("3 botellas de
+Beefeater" → Bebidas · Licores; "palillos" → Utensilios). Si se equivoca, se corrige con
+un toque. Lo que no reconoce cae en **Otros**, que es justo para eso.
+
+Dos decisiones que conviene saber, porque son discutibles y se cambian en un toque:
+**el agua va en Refrescos** (agrupa lo que son cajas de bebida sin alcohol, que es como se
+carga la furgoneta) y **la cerveza va en Otras bebidas** (no es refresco, ni vino, ni licor).
+
 ---
 
 ## Cómo funciona por debajo
@@ -79,8 +110,10 @@ Y dentro de cada documento, todos los puntos en un solo array:
 {
   items: [
     {
-      text: "Tres botellas de Verdejo",
+      text: "3 botellas de Verdejo",
       done: true,
+      cat: "bebidas",                      // bebidas | utensilios | otros
+      sub: "vinos",                        // solo en bebidas; null en el resto
       author: "Selu",                      // quién lo apuntó
       createdAt: 1737800000000,
       history: [                           // se acumula, nunca se recorta
@@ -90,6 +123,12 @@ Y dentro de cada documento, todos los puntos en un solo array:
   ]
 }
 ```
+
+Los puntos apuntados antes de que existieran los filtros no tienen `cat` ni `sub`
+guardados. No pasa nada: la app se los calcula al vuelo al pintarlos, **sin escribir en
+Firestore**. Si se escribieran al abrir, cada móvil que entrase dispararía una escritura
+de la lista entera sin que nadie haya tocado nada. La categoría solo se guarda cuando
+alguien la cambia a mano o cuando se apunta un punto nuevo.
 
 Está así a propósito: son listas de decenas de puntos, no de miles, y con todo en un mismo
 documento cada guardado es **una sola escritura** y cada actualización en tiempo real
@@ -128,6 +167,27 @@ const SECTIONS = [
 
 Añadir una sección nueva es meter un objeto más al array. El documento se crea vacío la
 primera vez que alguien abre esa pestaña; no hay que tocar nada en Firebase.
+
+### Añadir o cambiar categorías
+
+Las categorías están en el objeto `CATS` de `index.html`:
+
+```js
+const CATS = {
+  bebidas:    { label: 'Bebidas',    subs: { refrescos: 'Refrescos', vinos: 'Vinos', licores: 'Licores', otros: 'Otras' } },
+  utensilios: { label: 'Utensilios', subs: null },
+  otros:      { label: 'Otros',      subs: null }
+};
+```
+
+Con meter una entrada más ya aparece sola en los filtros y en el desplegable de cada punto:
+no hay que tocar nada más. `subs: null` significa que esa categoría no tiene subfiltros.
+
+Justo debajo está `REGLAS`, que es la lista de palabras con la que se adivina la categoría
+de lo que se apunta nuevo. **Se miran en orden y gana la primera que encaje**, así que lo
+específico va arriba. Las palabras se comparan **enteras**, no por trozos — por eso
+"colador" no cae en refrescos por contener "cola", ni "salsa" en otros por contener "sal".
+Si añades una categoría nueva, añádele también su regla o todo lo suyo caerá en *Otros*.
 
 ---
 

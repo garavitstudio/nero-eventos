@@ -184,13 +184,43 @@
   .item-text.done { text-decoration: line-through; color: #5f5a51; }
   .item-text.editing { outline: none; border-bottom: 1px solid #b08d4f; text-decoration: none; color: #e9e4d8; }
 
+  .item-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
   .item-author {
     font-size: 10px;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     color: #6b6459;
-    margin-top: 5px;
   }
+
+  /* La categoría es un <select> nativo disfrazado de etiqueta: en el móvil abre
+     el selector del sistema, que es lo más cómodo con una mano. */
+  .cat-select {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    border: 1px solid #2c2a26;
+    border-radius: 2px;
+    color: #8a8378;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 16px 4px 7px;
+    cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, #6b6459 50%), linear-gradient(135deg, #6b6459 50%, transparent 50%);
+    background-position: calc(100% - 8px) calc(50% + 1px), calc(100% - 5px) calc(50% + 1px);
+    background-size: 3px 3px, 3px 3px;
+    background-repeat: no-repeat;
+  }
+  .cat-select:focus { outline: none; border-color: #b08d4f; color: #b08d4f; }
+  .cat-select option, .cat-select optgroup { background: #161513; color: #e9e4d8; }
   .del-btn {
     flex-shrink: 0;
     width: 44px;
@@ -213,6 +243,93 @@
     font-style: italic;
     padding: 40px 0;
     font-family: 'Playfair Display', serif;
+  }
+
+  /* ---- Filtros ---- */
+  .filters { margin-bottom: 22px; }
+
+  .filter-label {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #565148;
+    margin-bottom: 7px;
+  }
+
+  /* Estado: control segmentado a todo el ancho */
+  .seg {
+    display: flex;
+    border: 1px solid #24221e;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .seg button {
+    flex: 1;
+    min-height: 44px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid #24221e;
+    color: #6b6459;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .seg button:last-child { border-right: none; }
+  .seg button.active { background: #b08d4f; color: #0e0e0e; }
+
+  /* Categorías: fichas que se ajustan solas */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips.sub { margin-top: 8px; padding-left: 14px; border-left: 1px solid #24221e; }
+  .chip {
+    min-height: 40px;
+    padding: 0 14px;
+    background: transparent;
+    border: 1px solid #24221e;
+    border-radius: 2px;
+    color: #6b6459;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip .chip-count { color: #48443c; margin-left: 5px; }
+  .chip.active { border-color: #b08d4f; color: #f4ead2; }
+  .chip.active .chip-count { color: #b08d4f; }
+  .chip:disabled { opacity: 0.35; cursor: default; }
+
+  .filter-reset {
+    display: block;
+    margin: 14px auto 0;
+    background: none;
+    border: none;
+    color: #6b6459;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: underline;
+    cursor: pointer;
+    min-height: 32px;
+  }
+  .filter-reset:hover { color: #b08d4f; }
+
+  .add-note {
+    display: none;
+    font-size: 11px;
+    color: #c17d5a;
+    font-style: italic;
+    margin: -18px 0 20px;
+    text-align: center;
   }
 
   .status {
@@ -284,6 +401,15 @@
     <input type="text" id="newItem" placeholder="Añadir un punto a la lista..." enterkeyhint="done" />
     <button class="add-btn" id="addBtn" type="button">Añadir</button>
   </div>
+  <div class="add-note" id="addNote"></div>
+
+  <div class="filters">
+    <div class="seg" id="filterEstado"></div>
+    <div class="filter-label">Filtrar por tipo</div>
+    <div class="chips" id="filterCat"></div>
+    <div class="chips sub" id="filterSub" hidden></div>
+    <button class="filter-reset" id="filterReset" type="button" hidden>Quitar filtros</button>
+  </div>
 
   <ul id="list"></ul>
   <div class="status" id="status">Cargando...</div>
@@ -319,36 +445,123 @@ const SECTIONS = [
 
 const NAME_STORAGE_KEY = 'nero-eventos:nombre';
 
+// Categorías. Solo "bebidas" tiene subcategorías; para añadir una nueva basta con
+// meterla aquí y aparece sola en los filtros y en el selector de cada punto.
+const CATS = {
+  bebidas:    { label: 'Bebidas',    subs: { refrescos: 'Refrescos', vinos: 'Vinos', licores: 'Licores', otros: 'Otras' } },
+  utensilios: { label: 'Utensilios', subs: null },
+  otros:      { label: 'Otros',      subs: null }
+};
+
+// Reglas de clasificación automática para lo que se apunte de nuevo. Se miran en
+// orden y gana la primera que encaje, así que lo más específico va arriba.
+const REGLAS = [
+  { cat: 'bebidas', sub: 'licores', kw: ['ron','barcelo','bacardi','ginebra','gin','beefeater','tanqueray','larios','seagrams','whisky','whiskey','ballantines','jb','dyc','vodka','absolut','smirnoff','martini','vermut','vermouth','licor','tequila','brandy','conac','cognac','orujo','pacharan','anis','cointreau','curacao','amaretto','baileys','jager','absenta','cazalla','ponche','chinchon'] },
+  { cat: 'bebidas', sub: 'vinos',     kw: ['vino','vinos','verdejo','yllera','hillera','tinto','tintos','blanco','rioja','ribera','albarino','rueda','cava','champagne','champan','espumoso','rosado','crianza','reserva','godello','tempranillo','moscatel','sidra','sangria','tinto de verano'] },
+  { cat: 'bebidas', sub: 'refrescos', kw: ['agua','aguas','pepsi','coca','cola','tonica','tonicas','fanta','sprite','refresco','refrescos','zumo','zumos','nestea','aquarius','bitter','kas','schweppes','trina','gaseosa','limonada','mosto','energetica','isotonica'] },
+  // La cerveza no es refresco ni licor ni vino, así que cae en "Otras bebidas"
+  { cat: 'bebidas', sub: 'otros',     kw: ['cerveza','cervezas','birra','clara','bebida','bebidas','botella','botellas','barril'] },
+  { cat: 'utensilios', sub: null, kw: ['vaso','vasos','copa','copas','cubilete','cubiletes','chupito','chupitos','cubierto','cubiertos','tenedor','tenedores','cuchillo','cuchillos','cuchara','cucharas','cucharita','cucharilla','servilleta','servilletas','mantel','manteles','bandeja','bandejas','cubitera','cubiteras','pinza','pinzas','palillo','palillos','coctelera','jarra','jarras','abridor','descorchador','sacacorchos','colador','cubo','cubos','bayeta','bayetas','balleta','balletas','trapo','trapos','delantal','plato','platos','fuente','cuenco','bol','dosificador','posavasos','pajita','pajitas','canita','canitas','removedor','hielera','botellero','tabla','exprimidor','jigger','medidor','papel','rollo','bolsa','bolsas','limpia','limpiamanos','toallita','toallitas','mechero','encendedor','velas','cinta','tijeras','rotulador'] },
+  { cat: 'otros', sub: null, kw: ['fruta','frutas','naranja','naranjas','limon','limones','lima','limas','menta','hierbabuena','hielo','sal','pimienta','azucar','especia','especias','condimento','aceite','vinagre','salsa','decoracion','adorno','flores'] }
+];
+
+function normalizar(t) {
+  return (t || '').toLowerCase()
+    .replace(/[áàäâ]/g, 'a').replace(/[éèëê]/g, 'e').replace(/[íìïî]/g, 'i')
+    .replace(/[óòöô]/g, 'o').replace(/[úùüû]/g, 'u')
+    .replace(/ñ/g, 'n').replace(/ç/g, 'c');
+}
+
+// Clasifica por palabras completas: así "colador" no cae en refrescos por "cola",
+// ni "salsa" en otros por "sal".
+function clasificar(text) {
+  const t = normalizar(text);
+  for (const regla of REGLAS) {
+    for (const kw of regla.kw) {
+      if (new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(t)) {
+        return { cat: regla.cat, sub: regla.sub };
+      }
+    }
+  }
+  return { cat: 'otros', sub: null };
+}
+
+// Los puntos apuntados antes de que existieran los filtros no tienen categoría
+// guardada: se les calcula al vuelo, sin escribir en Firestore (si no, cada móvil
+// que abriera la app dispararía una escritura).
+function catDe(item) {
+  if (item.cat && CATS[item.cat]) return item.cat;
+  return clasificar(item.text).cat;
+}
+function subDe(item) {
+  const cat = catDe(item);
+  if (!CATS[cat].subs) return null;
+  if (item.cat && item.sub && CATS[cat].subs[item.sub]) return item.sub;
+  const auto = clasificar(item.text);
+  return auto.cat === cat && auto.sub ? auto.sub : 'otros';
+}
+function nombreCat(item) {
+  const cat = catDe(item), sub = subDe(item);
+  return CATS[cat].label + (sub ? ' · ' + CATS[cat].subs[sub] : '');
+}
+
 let currentSection = SECTIONS[0].key;
 let items = [];
 let unsubscribe = null;
 let listenerToken = 0;   // evita que un listener viejo pinte sobre la pestaña nueva
 
+// Filtros. No se guardan en localStorage a propósito: si alguien abre el link y le
+// saliera media lista por un filtro de la última vez, pensaría que faltan cosas.
+let fEstado = 'todos';   // todos | pendientes | tachados
+let fCat = 'todas';
+let fSub = 'todas';
+
+const b = (text, done, cat, sub) => ({ text, done, cat, sub });
+
 const SEED_GENERAL = [
-  { text: 'Tres botellas de Verdejo', done: true },
-  { text: 'Dos botellas de Martini Blanco', done: true },
-  { text: 'Dos botellas de Martini Rosso', done: true },
-  { text: 'Tres botellas de Ron Barceló', done: true },
-  { text: 'Dos botellas de Beefeater', done: true },
-  { text: 'Dos botellas de Ginebra', done: true },
-  { text: 'Cuatro botellas de Hillera', done: true },
-  { text: 'Servilletas canguro', done: true },
-  { text: 'Bandejas', done: true },
-  { text: 'Fruta: naranja y limón', done: true },
-  { text: 'Cubiertos', done: true },
-  { text: 'Manteles', done: true },
-  { text: 'Vasos', done: true },
-  { text: 'Vasos de plástico', done: true },
-  { text: 'Cuatro cajas de agua', done: false },
-  { text: 'Cinco cajas de Pepsi Cero', done: false },
-  { text: 'Pepsi normal', done: false },
-  { text: 'Tres cajas de tónica', done: false }
+  b('3 botellas de Verdejo', true, 'bebidas', 'vinos'),
+  b('2 botellas de Martini Blanco', true, 'bebidas', 'licores'),
+  b('2 botellas de Martini Rosso', true, 'bebidas', 'licores'),
+  b('3 botellas de Ron Barceló', true, 'bebidas', 'licores'),
+  b('3 botellas de Beefeater', true, 'bebidas', 'licores'),
+  b('3 botellas de Ginebra', true, 'bebidas', 'licores'),
+  b('4 botellas de yllera', true, 'bebidas', 'vinos'),
+  b('Servilletas canguro', true, 'utensilios', null),
+  b('3 botellas ballantines', true, 'bebidas', 'licores'),
+  b('Bandejas', true, 'utensilios', null),
+  b('Fruta: naranja y limón', true, 'otros', null),
+  b('Cubiertos (Tenedor, cuchillo, cucharas)', true, 'utensilios', null),
+  b('Manteles', true, 'utensilios', null),
+  b('Vasos de plástico', true, 'utensilios', null),
+  b('5 cubiletes por si acaso', true, 'utensilios', null),
+  b('limpia manos de limón', true, 'utensilios', null),
+  b('4 cajas de agua', false, 'bebidas', 'refrescos'),
+  b('4 cajas de Pepsi Cero', false, 'bebidas', 'refrescos'),
+  b('5 Pepsi normal', false, 'bebidas', 'refrescos'),
+  b('3 cajas de tónica', false, 'bebidas', 'refrescos'),
+  b('copas', false, 'utensilios', null),
+  b('Hielo', false, 'otros', null),
+  b('2 Cubiteras', false, 'utensilios', null),
+  b('pinzas', false, 'utensilios', null),
+  b('palillos de dientes', false, 'utensilios', null),
+  b('sal', false, 'otros', null),
+  b('pimienta', false, 'otros', null),
+  b('balletas', false, 'utensilios', null)
 ];
 
+const SEED_COCTELERIA = [
+  b('5 botellas de Bacardí', true, 'bebidas', 'licores'),
+  b('Coctelera', true, 'utensilios', null),
+  b('cucharita larga', false, 'utensilios', null)
+];
+
+const SEEDS = { general: SEED_GENERAL, cocteleria: SEED_COCTELERIA };
+
 function seedFor(sectionKey) {
-  if (sectionKey !== 'general') return [];
+  const seed = SEEDS[sectionKey];
+  if (!seed) return [];
   const now = Date.now();
-  return SEED_GENERAL.map(i => ({ ...i, author: 'Selu', createdAt: now, history: [] }));
+  return seed.map(i => ({ ...i, author: 'Selu', createdAt: now, history: [] }));
 }
 
 function docRefFor(sectionKey) {
@@ -380,10 +593,20 @@ function renderTabs() {
   document.getElementById('sectionNote').textContent = active.note;
 }
 
+function quitarFiltros() {
+  fEstado = 'todos';
+  fCat = 'todas';
+  fSub = 'todas';
+  renderFiltros();
+}
+
 function switchSection(key) {
   if (key === currentSection) return;
   currentSection = key;
   items = [];
+  // Cada pestaña es una lista distinta: arrastrar el filtro de la anterior solo
+  // consigue que parezca vacía sin motivo.
+  quitarFiltros();
   renderTabs();
   render();
   attachListener();
@@ -449,24 +672,111 @@ function pushHistory(item, text) {
   item.history.push({ text, at: Date.now() });
 }
 
+function pasaFiltro(item) {
+  if (fEstado === 'pendientes' && item.done) return false;
+  if (fEstado === 'tachados' && !item.done) return false;
+  if (fCat !== 'todas' && catDe(item) !== fCat) return false;
+  if (fCat === 'bebidas' && fSub !== 'todas' && subDe(item) !== fSub) return false;
+  return true;
+}
+
+function hayFiltro() {
+  return fEstado !== 'todos' || fCat !== 'todas' || fSub !== 'todas';
+}
+
+// Cuenta cuántos puntos caerían en una categoría con el filtro de estado puesto,
+// para poder enseñar el número en cada ficha.
+function cuenta(fn) {
+  return items.filter(i => {
+    if (fEstado === 'pendientes' && i.done) return false;
+    if (fEstado === 'tachados' && !i.done) return false;
+    return fn(i);
+  }).length;
+}
+
+function renderFiltros() {
+  const seg = document.getElementById('filterEstado');
+  seg.innerHTML = '';
+  [['todos', 'Todos'], ['pendientes', 'Pendientes'], ['tachados', 'Tachados']].forEach(([k, label]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = fEstado === k ? 'active' : '';
+    btn.textContent = label;
+    btn.onclick = () => { fEstado = k; renderFiltros(); render(); };
+    seg.appendChild(btn);
+  });
+
+  const catsEl = document.getElementById('filterCat');
+  catsEl.innerHTML = '';
+  const ficha = (activa, label, n, onClick) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip' + (activa ? ' active' : '');
+    btn.textContent = label;
+    const c = document.createElement('span');
+    c.className = 'chip-count';
+    c.textContent = n;
+    btn.appendChild(c);
+    btn.disabled = n === 0 && !activa;
+    btn.onclick = onClick;
+    return btn;
+  };
+
+  catsEl.appendChild(ficha(fCat === 'todas', 'Todas', cuenta(() => true), () => {
+    fCat = 'todas'; fSub = 'todas'; renderFiltros(); render();
+  }));
+  Object.keys(CATS).forEach(k => {
+    catsEl.appendChild(ficha(fCat === k, CATS[k].label, cuenta(i => catDe(i) === k), () => {
+      fCat = k; fSub = 'todas'; renderFiltros(); render();
+    }));
+  });
+
+  // La fila de subfiltros solo tiene sentido dentro de una categoría que las tenga
+  const subEl = document.getElementById('filterSub');
+  const subs = fCat !== 'todas' && CATS[fCat] ? CATS[fCat].subs : null;
+  subEl.hidden = !subs;
+  subEl.innerHTML = '';
+  if (subs) {
+    subEl.appendChild(ficha(fSub === 'todas', 'Todas', cuenta(i => catDe(i) === fCat), () => {
+      fSub = 'todas'; renderFiltros(); render();
+    }));
+    Object.keys(subs).forEach(sk => {
+      subEl.appendChild(ficha(fSub === sk, subs[sk], cuenta(i => catDe(i) === fCat && subDe(i) === sk), () => {
+        fSub = sk; renderFiltros(); render();
+      }));
+    });
+  }
+
+  document.getElementById('filterReset').hidden = !hayFiltro();
+}
+
 function render() {
   const list = document.getElementById('list');
   const status = document.getElementById('status');
 
-  // Si alguien está escribiendo en un punto, no repintamos: le borraríamos
-  // la edición a medias cuando llega un cambio de otro móvil.
+  // Si alguien está escribiendo en un punto o tiene abierto el selector de
+  // categoría, no repintamos: le borraríamos lo que está haciendo cuando llega
+  // un cambio de otro móvil.
   const active = document.activeElement;
-  if (active && active.classList && active.classList.contains('item-text')) return;
+  if (active && active.classList &&
+      (active.classList.contains('item-text') || active.classList.contains('cat-select'))) return;
 
   list.innerHTML = '';
+  const visibles = items.filter(pasaFiltro).length;
 
   if (items.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty';
     empty.textContent = 'Nada por aquí todavía';
     list.appendChild(empty);
+  } else if (visibles === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = 'Nada en este filtro';
+    list.appendChild(empty);
   } else {
     items.forEach((item, idx) => {
+      if (!pasaFiltro(item)) return;   // idx sigue siendo el real, no el de la vista
       const li = document.createElement('li');
 
       const checkBtn = document.createElement('button');
@@ -504,12 +814,43 @@ function render() {
       });
       body.appendChild(text);
 
+      const meta = document.createElement('div');
+      meta.className = 'item-meta';
+
+      const sel = document.createElement('select');
+      sel.className = 'cat-select';
+      sel.setAttribute('aria-label', 'Categoría');
+      const valorActual = catDe(item) + '|' + (subDe(item) || '');
+      Object.keys(CATS).forEach(ck => {
+        const subs = CATS[ck].subs;
+        if (subs) {
+          const grupo = document.createElement('optgroup');
+          grupo.label = CATS[ck].label;
+          Object.keys(subs).forEach(sk => {
+            const o = document.createElement('option');
+            o.value = ck + '|' + sk;
+            o.textContent = CATS[ck].label + ' · ' + subs[sk];
+            grupo.appendChild(o);
+          });
+          sel.appendChild(grupo);
+        } else {
+          const o = document.createElement('option');
+          o.value = ck + '|';
+          o.textContent = CATS[ck].label;
+          sel.appendChild(o);
+        }
+      });
+      sel.value = valorActual;
+      sel.onchange = () => cambiarCategoria(idx, sel.value);
+      meta.appendChild(sel);
+
       if (item.author) {
-        const author = document.createElement('div');
+        const author = document.createElement('span');
         author.className = 'item-author';
         author.textContent = 'apuntado por ' + item.author;
-        body.appendChild(author);
+        meta.appendChild(author);
       }
+      body.appendChild(meta);
 
       if (Array.isArray(item.history) && item.history.length > 0) {
         const historyWrap = document.createElement('div');
@@ -538,9 +879,22 @@ function render() {
   }
 
   const pending = items.filter(i => !i.done).length;
-  status.textContent = items.length === 0
-    ? 'Sin pendientes'
-    : `${pending} pendiente${pending !== 1 ? 's' : ''} de ${items.length}`;
+  if (items.length === 0) {
+    status.textContent = 'Sin pendientes';
+  } else {
+    const base = `${pending} pendiente${pending !== 1 ? 's' : ''} de ${items.length}`;
+    // Con un filtro puesto hay que decir cuántos se están viendo, o parece que
+    // faltan cosas de la lista.
+    status.textContent = hayFiltro() ? `${base} · mostrando ${visibles}` : base;
+  }
+  renderFiltros();
+}
+
+function avisoAdd(texto) {
+  const el = document.getElementById('addNote');
+  el.textContent = texto;
+  el.style.display = texto ? 'block' : 'none';
+  if (texto) setTimeout(() => { el.style.display = 'none'; }, 5000);
 }
 
 async function addItem() {
@@ -551,8 +905,29 @@ async function addItem() {
   const text = input.value.trim();
   if (!text) return;
 
-  items.push({ text, done: false, author: name, createdAt: Date.now(), history: [] });
+  const { cat, sub } = clasificar(text);
+  const nuevo = { text, done: false, cat, sub, author: name, createdAt: Date.now(), history: [] };
+  items.push(nuevo);
   input.value = '';
+
+  // Si el filtro activo lo deja fuera, avisamos en vez de que parezca que no se guardó
+  avisoAdd(pasaFiltro(nuevo) ? '' : `Añadido en ${nombreCat(nuevo)}, pero el filtro activo no lo muestra`);
+
+  render();
+  await saveItems();
+}
+
+async function cambiarCategoria(idx, valor) {
+  const name = requireName();
+  const item = items[idx];
+  if (!name || !item) { render(); return; }
+
+  const [cat, sub] = valor.split('|');
+  const antes = nombreCat(item);
+  item.cat = cat;
+  item.sub = sub || null;
+  const despues = nombreCat(item);
+  if (antes !== despues) pushHistory(item, `${name} movió "${item.text}" de ${antes} a ${despues}`);
   render();
   await saveItems();
 }
@@ -611,7 +986,13 @@ document.getElementById('newItem').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); addItem(); }
 });
 
+document.getElementById('filterReset').addEventListener('click', () => {
+  quitarFiltros();
+  render();
+});
+
 renderTabs();
+renderFiltros();
 attachListener();
 </script>
 </body>
